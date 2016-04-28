@@ -13,3 +13,5 @@ MGui is a general purpose library for GUIs containing hundreds of commonly used 
 * String helpers
 * Weak reference helpers
 * An InputBox
+
+See the source for documented function descriptions.
