@@ -12,11 +12,11 @@ namespace MGui.Datatypes
     public class PropertyPath<TSource, TDestination>
     {
         public delegate TDestination Property( TSource target );
-        private readonly PropertyInfo[] _properties;
+        private readonly SettableInfo[] _properties;
 
         public PropertyPath( Expression<Property> property )
         {
-            List<PropertyInfo> properties = new List<PropertyInfo>();
+            List<SettableInfo> properties = new List<SettableInfo>();
 
             var body = property.Body;
 
@@ -27,7 +27,7 @@ namespace MGui.Datatypes
                 if (bodyUe != null)
                 {
                     MemberExpression memEx = bodyUe.Operand as MemberExpression;
-                    properties.Add( (PropertyInfo)memEx.Member );
+                    properties.Add( SettableInfo.New(memEx.Member) );
 
                     body = memEx.Expression;
                     continue;
@@ -37,14 +37,19 @@ namespace MGui.Datatypes
 
                 if (bodyMe != null)
                 {
-                    properties.Add( (PropertyInfo)bodyMe.Member );
+                    properties.Add( SettableInfo.New( bodyMe.Member) );
 
                     body = bodyMe.Expression;
                     continue;
                 }
             }
 
-            _properties = properties.Reverse<PropertyInfo>().ToArray();
+            _properties = properties.Reverse<SettableInfo>().ToArray();
+        }
+
+        public PropertyPath( params SettableInfo[] pathInSequence )
+        {
+            _properties = pathInSequence;
         }
 
         public bool HasDefaultValue
@@ -70,7 +75,7 @@ namespace MGui.Datatypes
             }
         }
 
-        public PropertyInfo Last
+        public SettableInfo Last
         {
             get
             {
@@ -80,16 +85,26 @@ namespace MGui.Datatypes
 
         public TDestination Get( TSource source )
         {
-            PropertyInfo property = null;
             object target = source;
 
-            foreach (PropertyInfo property2 in _properties)
+            for (int n = 0; n < _properties.Length; n++)
             {
-                target = property2.GetValue( target );
-                property = property2;
+                SettableInfo property = _properties[n];
+
+                target = property.GetValue( target );
+
+                if ((n != _properties.Length - 1) && target == null)
+                {
+                    target = TryToCreateTarget( property.PropertyType );
+                }                     
             }
 
             return (TDestination)target;
+        }
+
+        private object TryToCreateTarget( Type t )
+        {
+            return Activator.CreateInstance( t );
         }
 
         public void Set( TSource source, TDestination value )
@@ -98,7 +113,7 @@ namespace MGui.Datatypes
 
             for (int n = 0; n < _properties.Length; n++)
             {
-                PropertyInfo property = _properties[n];
+                SettableInfo property = _properties[n];
 
                 if (n == _properties.Length - 1)
                 {
@@ -106,9 +121,28 @@ namespace MGui.Datatypes
                 }
                 else
                 {
+                    object lastTarget = target;
                     target = property.GetValue( target );
+
+                    if (target == null)
+                    {
+                        target = TryToCreateTarget( property.PropertyType );
+                        property.SetValue( lastTarget, target );
+                    }
                 }
             }
+        }
+
+        internal static PropertyPath<TSource,TDestination>[] ReflectAll( Type type )
+        {
+            List<PropertyPath<TSource, TDestination>> result = new List<PropertyPath<TSource, TDestination>>();
+
+            foreach (SettableInfo settable in type.GetSettables())
+            {
+                result.Add( new PropertyPath<TSource, TDestination>( settable ) );
+            }
+
+            return result.ToArray();
         }
     }
 }

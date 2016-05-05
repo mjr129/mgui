@@ -7,10 +7,15 @@ using System.Threading.Tasks;
 
 namespace MGui.Helpers
 {
+    /// <summary>
+    /// A suite of functions for assisting with arrays.
+    /// Most of these are extension methods.
+    /// </summary>
     public static class ArrayHelper
     {
         /// <summary>
-        /// (MJR) Is the enum empty?
+        /// (MJR) (EXTENSION)
+        /// Is the <paramref name="enumerable"/> empty?
         /// </summary>
         public static bool IsEmpty( this IEnumerable enumerable )
         {
@@ -18,7 +23,8 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (MJR) Returns the unique elements.
+        /// (MJR) (EXTENSION)
+        /// Returns the unique elements (i.e. ToHashSet).
         /// </summary>
         public static HashSet<T> Unique<T>( this IEnumerable<T> self )
         {
@@ -26,7 +32,8 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (MJR) Returns the unique elements.
+        /// (MJR) (EXTENSION)
+        /// Returns the unique elements (i.e. ToHashSet).
         /// </summary>
         public static HashSet<TResult> Unique<T, TResult>( this IEnumerable<T> self, Func<T, TResult> selector )
         {
@@ -34,7 +41,8 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (MJR) Like Linq.Concat for single elements
+        /// (MJR) (EXTENSION)
+        /// Like <see cref="Linq.Concat"/> but for single elements
         /// </summary>
         public static IEnumerable<T> ConcatSingle<T>( this IEnumerable<T> self, T toAdd )
         {
@@ -42,12 +50,19 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (MJR) Appends item(s) to an array, returns the result.
+        /// (MJR) (EXTENSION)
+        /// Appends item(s) to an array and returns the result.
+        /// The original array is unmodified.
         /// </summary>
         public static T[] Append<T>( this T[] self, params T[] toAdd )
         {
             int p = self.Length;
-            Array.Resize( ref self, self.Length + toAdd.Length );
+            T[] result = new T[p + toAdd.Length];
+
+            for (int n = 0; n < self.Length; n++)
+            {
+                result[n] = self[n];
+            }                       
 
             for (int i = 0; i < toAdd.Length; i++)
             {
@@ -58,7 +73,8 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (MJR) Converts or returns a reference to the list.
+        /// (MJR) (EXTENSION)
+        /// Converts or returns a reference to the list.
         /// </summary>
         public static List<T> AsList<T>( this IEnumerable<T> enumerable )
         {
@@ -78,7 +94,8 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (MJR) Replaces the contents of this list with another.
+        /// (MJR) (EXTENSION)
+        /// Replaces the contents of this list with another.
         /// </summary>
         public static void ReplaceAll<T>( this List<T> self, IEnumerable<T> newContent )
         {
@@ -91,6 +108,12 @@ namespace MGui.Helpers
             self.AddRange( newContent );
         }
 
+        /// <summary>
+        /// (MJR) (EXTENSION)
+        /// Replaces a single element of the enumerable.
+        /// An exception is thrown if more than one instance of that element exists, or if the
+        /// element does not exist, in the original array.
+        /// </summary>                                    
         public static IEnumerable<T> ReplaceSingle<T>( this IEnumerable<T> self, T find, T replace )
         {
             bool hasFound = false;
@@ -119,6 +142,10 @@ namespace MGui.Helpers
             }
         }
 
+        /// <summary>
+        /// (MJR) (EXTENSION)
+        /// Provides AddRange functionality for a <see cref="HashSet{T}"/>.
+        /// </summary>                                                 
         public static void AddRange<T>( this HashSet<T> self, IEnumerable<T> toAdd )
         {
             foreach (T o in toAdd)
@@ -127,6 +154,10 @@ namespace MGui.Helpers
             }
         }
 
+        /// <summary>
+        /// (MJR) (EXTENSION)
+        /// Provides AddRange functionality for a <see cref="Dictionary{TKey, TValue}"/>.
+        /// </summary>             
         public static void AddRange<TKey, TValue>( this Dictionary<TKey, TValue> self, Dictionary<TKey, TValue> toAdd )
         {
             foreach (KeyValuePair<TKey, TValue> kvp in toAdd)
@@ -135,6 +166,10 @@ namespace MGui.Helpers
             }
         }
 
+        /// <summary>
+        /// (MJR) (EXTENSION)
+        /// Provides AddRange functionality for a <see cref="Dictionary{TKey, TValue}"/>.
+        /// </summary>             
         public static void AddRange<TKey, TValue>( this Dictionary<TKey, TValue> self, IEnumerable<TValue> toAdd, Converter<TValue, TKey> keySelector )
         {
             foreach (TValue kvp in toAdd)
@@ -143,6 +178,10 @@ namespace MGui.Helpers
             }
         }
 
+        /// <summary>
+        /// (MJR) (EXTENSION)
+        /// Provides AddRange functionality for a <see cref="Dictionary{TKey, TValue}"/>.
+        /// </summary>             
         public static void AddRange<TKey, TValue, TEnum>( this Dictionary<TKey, TValue> self, IEnumerable<TEnum> toAdd, Converter<TEnum, TKey> keySelector, Converter<TEnum, TValue> valueSelector )
             where TEnum : struct, IComparable, IFormattable, IConvertible // aka. Enum
         {
@@ -153,7 +192,9 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (MJR) Returns the indices of the enumerable
+        /// (MJR) (EXTENSION)
+        /// Returns the indices of the enumerable.
+        /// R: seq_along(x)
         /// </summary>
         public static IEnumerable<int> Indices( this IList self )
         {
@@ -189,7 +230,9 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (MJR) Returns the indices of the enumerable
+        /// (MJR) (EXTENSION)
+        /// Returns the indices of the enumerable
+        /// R equivalent of: seq_along(self)
         /// </summary>
         public static IEnumerable<int> Indices( this IEnumerable self )
         {
@@ -437,15 +480,29 @@ namespace MGui.Helpers
             return @default;
         }
 
-        public static IEnumerable<T> Corresponding<T>( this IEnumerable<T> array1, IEnumerable<bool> array2 )
+        /// <summary>
+        /// Negates a boolean array.   
+        /// </summary>              
+        public static IEnumerable<bool> Negate( this IEnumerable<bool> array )
         {
-            return Corresponding<T, bool>( array1, array2, λ => λ );
+            return array.Select( z => !z );
         }
 
         /// <summary>
-        /// (MJR) Yields elements of array where corrsponding elements in array2 are matched by the predicate
+        /// (MJR) (EXTENSION)
+        /// R equivalent of: array[...]
+        /// </summary>             
+        public static IEnumerable<T> At<T>( this IEnumerable<T> array1, IEnumerable<bool> array2 )
+        {
+            return At<T, bool>( array1, array2, λ => λ );
+        }                    
+
+        /// <summary>
+        /// (MJR) (EXTENSION)
+        /// Yields elements of array where corrsponding elements in array2 are matched by the predicate
+        /// R equivalent of: array[...]
         /// </summary>
-        public static IEnumerable<T> Corresponding<T, U>( this IEnumerable<T> array1, IEnumerable<U> array2, Predicate<U> predicate )
+        public static IEnumerable<T> At<T, U>( this IEnumerable<T> array1, IEnumerable<U> array2, Predicate<U> predicate )
         {
             var e1 = array1.GetEnumerator();
             var e2 = array2.GetEnumerator();
@@ -512,7 +569,7 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (MJR) Yields indices of array where the predicate is true (or -1 if not).
+        /// (MJR) Yields the first index of the array where the item equals the passed value (returns -1 if not found).
         /// </summary>
         public static int IndexOf<T>( this IEnumerable<T> array, T item )
         {
@@ -532,29 +589,36 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (MJR) Yields indices of array where the predicate is true and returns the results in the specified order.
+        /// (MJR) Yields indices of <paramref name="array"/> where the <paramref name="predicate"/> 
+        /// is true and returns the results in the specified <paramref name="order"/>.
         /// </summary>
         public static IEnumerable<int> WhichInOrder<T>( this IReadOnlyList<T> array, Predicate<T> predicate, Comparison<T> order )
         {
             int[] which = Which( array, predicate ).ToArray();
-            T[] vals = In( array, which ).ToArray();
+            T[] vals = Extract<T>( array, which ).ToArray();
 
             ArrayHelper.Sort( vals, which, order );
 
             return which;
         }
 
+        /// <summary>
+        /// (MJR) (EXTENSION)
+        /// Yields the indices of the <paramref name="array"/> in the order specified by
+        /// <paramref name="order"/>.
+        /// </summary>                                                      
         public static IEnumerable<int> WhichOrder<T>( this T[] array, Comparison<T> order )
         {
-            int[] which = array.Indices().ToArray();
+            int[] indices = array.Indices().ToArray();
 
-            ArrayHelper.Sort( array, which, order );
+            ArrayHelper.Sort( array, indices, order );
 
-            return which;
+            return indices;
         }
 
         /// <summary>
-        /// (MJR) Yields indices of array where the predicate is true.
+        /// (MJR) Yields the indices of <paramref name="array"/> where the <paramref name="predicate"/>
+        /// is true.
         /// </summary>
         public static IEnumerable<int> Which<T>( this IEnumerable<T> array, Predicate<T> predicate )
         {
@@ -569,9 +633,17 @@ namespace MGui.Helpers
 
                 ++n;
             }
-        }
+        }      
 
-        public static T[] In2<T>( this T[] array, int[] which )
+        /// <summary>
+        /// (MJR) (EXTENSION)
+        /// This is a version of <see cref="At"/> which returns an array.
+        /// Since the size of the array is known in advance this is slightly more optimal.
+        /// </summary>                      
+        /// <param name="array">Source array</param>
+        /// <param name="which">Indices of elements to extract. Elements are returned in this order. Duplicates are permitted.</param>
+        /// <returns>Subset or array</returns>
+        public static T[] Extract<T>( this IReadOnlyList<T> array, int[] which )
         {
             T[] result = new T[which.Length];
 
@@ -581,13 +653,13 @@ namespace MGui.Helpers
             }
 
             return result;
-        }
+        }                 
 
         /// <summary>
         /// (MJR) Yields the elements of array which correspond to the indices of which.
         /// Indices may be specified in any order and duplicates are permitted.
         /// </summary>
-        public static IEnumerable<T> In<T>( this T[] array, IEnumerable<int> which )
+        public static IEnumerable<T> At<T>( this T[] array, IEnumerable<int> which )
         {
             foreach (int i in which)
             {
@@ -599,7 +671,7 @@ namespace MGui.Helpers
         /// (MJR) Yields the elements of array which correspond to the indices of which.
         /// Indices may be specified in any order and duplicates are permitted.
         /// </summary>
-        public static IEnumerable<T> In<T>( this IReadOnlyList<T> array, IEnumerable<int> which )
+        public static IEnumerable<T> At<T>( this IReadOnlyList<T> array, IEnumerable<int> which )
         {
             foreach (int i in which)
             {
@@ -633,9 +705,10 @@ namespace MGui.Helpers
         }
 
         /// <summary>
+        /// (MJR) (EXTENSION)
         /// Flattens a jagged array.
         /// </summary>              
-        public static double[,] Flatten( double[][] jagged )
+        public static double[,] Flatten( this double[][] jagged )
         {
             int numi = jagged.Length;
             int numj = jagged[0].Length;
@@ -643,6 +716,11 @@ namespace MGui.Helpers
 
             for (int i = 0; i < numi; i++)
             {
+                if (i != 0 && (jagged[i].Length != jagged[i + 1].Length))
+                {
+                    throw new InvalidOperationException( "Attempt to flatten a jagged array where all elements are not of equal length." );
+                }
+
                 for (int j = 0; j < numj; j++)
                 {
                     result[i, j] = jagged[i][j];
@@ -666,5 +744,39 @@ namespace MGui.Helpers
                 return order( x, y );
             }
         }
+
+        #region Obsolete wrappers 
+
+        [Obsolete( "Use At" )]
+        public static IEnumerable<T> Corresponding<T>( this IEnumerable<T> array1, IEnumerable<bool> array2 )
+        {
+            return At( array1, array2 );
+        }
+
+        [Obsolete( "Use At" )]
+        public static IEnumerable<T> Corresponding<T, U>( this IEnumerable<T> array1, IEnumerable<U> array2, Predicate<U> predicate )
+        {
+            return At( array1, array2, predicate );
+        }
+
+        [Obsolete( "Use Extract" )]
+        public static T[] In2<T>( this T[] array, int[] which )
+        {
+            return Extract( array, which );
+        }      
+
+        [Obsolete( "Use At" )]
+        public static IEnumerable<T> In<T>( this T[] array, IEnumerable<int> which )
+        {
+            return At( array, which );
+        }
+
+        [Obsolete( "Use At" )]
+        public static IEnumerable<T> In<T>( this IReadOnlyList<T> array, IEnumerable<int> which )
+        {
+            return At( array, which );
+        }
+
+        #endregion
     }
 }

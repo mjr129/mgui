@@ -34,6 +34,7 @@ namespace MGui
             if (populateWithDefaults)
             {
                 Add( new BinderTextBox() );
+                Add( new BinderTextBoxArray() );
                 Add( new BinderCheckBox() );
                 Add( new BinderRadioButton() );
                 Add( new BinderNumericUpDown() );
@@ -45,7 +46,20 @@ namespace MGui
             _all.Add( binder );
         }
 
-        public Binder FindSuitableBinder( object control, Type dataType )
+        public Binder FindSuitableBinder( Type dataType )
+        {
+            foreach (Binder b in _all)
+            {
+                if (b.CanHandle( dataType ))
+                {
+                    return b;
+                }
+            }
+
+            throw new InvalidOperationException( "Cannot find a Binder for " + dataType.Name );
+        }
+
+        public Binder FindSuitableBinder( Control control, Type dataType )
         {
             foreach (Binder b in _all)
             {
@@ -61,35 +75,61 @@ namespace MGui
 
     public abstract class Binder
     {
-        public abstract bool CanHandle( object control, Type dataType );
-        public abstract object Get( object control, Type dataType );
-        public abstract void Set( object control, object value, Type dataType );
+        public abstract Control CreateControl( Type dataType );
+        public abstract bool CanHandle( Control control );
+        public abstract bool CanHandle( Type dataType );
+        public abstract object Get( Control control, Type dataType );
+        public abstract void Set( Control control, object value, Type dataType );
+        public bool CanHandle( Control control, Type dataType )
+        {
+            return CanHandle( control ) && CanHandle( dataType );
+        }
     }
 
     public abstract class Binder<TControl, TData> : Binder
+        where TControl : Control, new()
     {
-        public override bool CanHandle( object control, Type dataType )
+        public override bool CanHandle( Control control )
         {
-            return typeof( TControl ).IsAssignableFrom( control.GetType() ) && typeof( TData ).IsAssignableFrom( dataType );
+            return typeof( TControl ).IsAssignableFrom( control.GetType() );
         }
 
-        public override object Get( object control, Type dataType )
+        public override bool CanHandle( Type dataType )
         {
-            return Get( (TControl)control, dataType );
+             return typeof( TData ).IsAssignableFrom( dataType );
+        }
+
+        public override object Get( Control control, Type dataType )
+        {
+            return GetValue( (TControl)control, dataType );
         }
 
         protected abstract TData GetValue( TControl control, Type dataType );
 
-        public override void Set( object control, object value, Type dataType )
+        public override void Set( Control control, object value, Type dataType )
         {
             SetValue( (TControl)control, (TData)value, dataType );
+        }
+
+        public sealed override Control CreateControl( Type dataType )
+        {
+            TControl control = new TControl();   
+
+            ConfigureControl( control );
+
+            return control;
+        }
+
+        protected virtual void ConfigureControl( TControl control )
+        {
+            // No action
         }
 
         protected abstract void SetValue( TControl control, TData value, Type dataType );
     }
 
     internal class BinderTextBox : Binder<TextBox, IConvertible>
-    {
+    {         
         protected override IConvertible GetValue( TextBox control, Type dataType )
         {
             return (IConvertible)Convert.ChangeType( control.Text, dataType );
@@ -103,15 +143,32 @@ namespace MGui
 
     internal class BinderTextBoxArray : Binder<TextBox, Array>
     {
+        public override bool CanHandle( Type dataType )
+        {
+            return dataType.IsArray 
+                && dataType.GetArrayRank() == 1
+                && typeof( IConvertible ).IsAssignableFrom( dataType.GetElementType() );
+        } 
+
         protected override Array GetValue( TextBox control, Type dataType )
         {
             Type dt = dataType.GetElementType();
-            return Spreadsheet.ReadFields( control.Text ).Select( z => (IConvertible)Convert.ChangeType( z, dt ) ).ToArray();
+
+            string[] fields = SpreadsheetReader.Default.ReadFields( control.Text );         
+
+            Array result= Array.CreateInstance( dt, fields.Length );
+
+            for (int n = 0; n < fields.Length; n++)
+            {
+                result.SetValue( Convert.ChangeType( fields[n], dt ), n );
+            }
+
+            return result;
         }
 
         protected override void SetValue( TextBox control, Array value, Type dataType )
         {
-            control.Text = Spreadsheet.WriteFields( value );
+            control.Text = SpreadsheetReader.Default.WriteFields( value );
         }
     }
 

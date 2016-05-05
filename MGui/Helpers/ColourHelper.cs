@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -14,13 +15,15 @@ namespace MGui
 
         public static Color ComplementaryColour( Color colour )
         {
-            return colour.GetBrightness() > 0.5 ? Color.Black : Color.White;
+            int b = (colour.R * 2 + colour.G * 2 + colour.B ) / 5;
+
+            return b > 128 ? Color.Black : Color.White;
         }
 
         /// <summary>
         /// Converts a colour to its name.
         /// </summary>                    
-        public static string ColourToName( Color colour )
+        public static string ColourToName( Color colour, bool useClosest = false )
         {
             if (colour.IsNamedColor)
             {
@@ -31,9 +34,9 @@ namespace MGui
             {
                 __colourNames = new Dictionary<int, string>();
 
-                foreach (KnownColor kc in Enum.GetValues( typeof( KnownColor ) ))
+                foreach (PropertyInfo kc in typeof( Color ).GetProperties( BindingFlags.Static | BindingFlags.Public ))
                 {
-                    Color c = Color.FromKnownColor( kc );
+                    Color c = (Color)kc.GetValue( null );
                     __colourNames[c.ToArgb()] = c.Name;
                 }
             }
@@ -42,6 +45,30 @@ namespace MGui
             if (__colourNames.TryGetValue( colour.ToArgb(), out name ))
             {
                 return name;
+            }
+
+            if (useClosest)
+            {
+                int cd = int.MaxValue;
+                string cname = null;
+
+                foreach (var value in __colourNames)
+                {
+                    Color c = Color.FromArgb( value.Key );
+                    int rd = (c.R - colour.R);
+                    int gd = (c.G - colour.G);
+                    int bd = (c.B - colour.B);
+
+                    int dist = rd * rd + gd * gd + bd * bd;
+
+                    if (dist < cd)
+                    {
+                        cname = value.Value;
+                        cd = dist;
+                    }
+                }
+
+                return cname + "ish";
             }
 
             return colour.R.ToString() + ", " + colour.G + ", " + colour.B;

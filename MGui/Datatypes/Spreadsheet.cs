@@ -6,45 +6,144 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MGui.Helpers;
 
 namespace MGui.Datatypes
 {
-    public static class Spreadsheet
-    {
-        public class Config
-        {
-            public char Delimiter = ',';
-            public char OpenQuote = '\"';
-            public char CloseQuote = '\"';
-
-            public static readonly Config Default = new Config();
-        }
-
-        public static Spreadsheet<T> Read<T>( string fileName, bool hasRowNames = true, bool hasColNames = true, Converter<string, T>  converter = null, ProgressDelegate progressReporter = null )
-        {
-            return Spreadsheet<T>.Read( fileName, hasRowNames, hasColNames, converter, progressReporter );
-        }    
-
+    /// <summary>
+    /// Spreadsheet and parsing utilities.
+    /// </summary>
+    public class SpreadsheetReader
+{
         public delegate bool ProgressDelegate( int rowIndex, int numRows );
 
-        public static string WriteFields( IEnumerable x, Config config = null)
+        public char Delimiter = ',';
+        public char OpenQuote = '\"';
+        public char CloseQuote = '\"';
+        public bool HasRowNames = true;
+        public bool HasColNames = true;
+        public bool TolerantConversion = false;
+        public ProgressDelegate Progress = null;
+        //public Converter<string, T> Converter = null; 
+
+        public static readonly SpreadsheetReader Default = new SpreadsheetReader();
+
+        /// <summary>
+        /// Obtains the default converter.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tolerantConversion"></param>
+        /// <returns></returns>
+        private Converter<string, T> GetConverter<T>()
         {
-            config = config ?? Config.Default;
+            if (typeof( T ) == typeof( double ))
+            {
+                if (this.TolerantConversion)
+                {
+                    return z =>
+                    {
+                        double result;
+                        return double.TryParse( z, out result ) ? (T)(object)result : default( T );
+                    };
+                }
+                else
+                {
+                    return z => (T)(object)double.Parse( z );
+                }
+            }
+            else if (typeof( T ) == typeof( int ))
+            {
+                if (this.TolerantConversion)
+                {
+                    return z =>
+                    {
+                        int result;
+                        return int.TryParse( z, out result ) ? (T)(object)result : default( T );
+                    };
+                }
+                else
+                {
+                    return z => (T)(object)int.Parse( z );
+                }
+            }
+            else if (typeof( T ) == typeof( long ))
+            {
+                if (this.TolerantConversion)
+                {
+                    return z =>
+                    {
+                        long result;
+                        return long.TryParse( z, out result ) ? (T)(object)result : default( T );
+                    };
+                }
+                else
+                {
+                    return z => (T)(object)long.Parse( z );
+                }
+            }
+            else if (typeof( T ) == typeof( Cell ))
+            {
+                return z=> (T)(object)new Cell( z );
+            }
+            else if (typeof( T ) == typeof( string ))
+            {
+                return z => (T)(object)z;
+            }
+            else
+            {
+                throw new InvalidOperationException( "Error" );
+            }
+        }
+
+        /// <summary>
+        /// Reads a full spreadsheet.
+        /// </summary>
+        /// <typeparam name="T">Type of data to read</typeparam>
+        /// <param name="fileName">Filename of spreadsheet</param>
+        /// <param name="converter">Conversion of values to <typeparamref name="T"/> (NULL uses the default, if available)</param>
+        /// <returns>The spreadsheet</returns>
+        public Spreadsheet<T> Read<T>( string fileName, Converter<string, T> converter = null)
+        {     
+            return Spreadsheet<T>.InternalRead( fileName, this, converter ?? GetConverter<T>() );
+        }
+
+        /// <summary>
+        /// Reads a full spreadsheet of values.
+        /// </summary>
+        /// <param name="fileName">Filename of spreadsheet</param>                                                                
+        /// <returns>The spreadsheet</returns>
+        public Spreadsheet<Cell> Read( string fileName )
+        {
+            return Spreadsheet<Cell>.InternalRead( fileName, this, z => new Cell( z ) );
+        }
+
+        /// <summary>
+        /// Writes a set of fields into a delimited string.
+        /// Like <see cref="string.Join"/> but with escapement.
+        /// </summary>            
+        public string WriteFields( IEnumerable fields)
+        {                                                
             StringBuilder result = new StringBuilder();
 
-            foreach (string xx in x)
+            if (fields == null)
             {
+                return string.Empty;
+            }
+
+            foreach (object xxx in fields)
+            {
+                string xx = xxx.ToString();
                 string s = Convert.ToString( xx );
 
                 if (result.Length != 0)
                 {
-                    result.Append( config.Delimiter );
+                    result.Append( this.Delimiter );
                 }
 
-                if (s.Contains( config.Delimiter ) || s.Contains( config.OpenQuote ) || s.Contains(config.CloseQuote ) || s.StartsWith( " " ) || s.EndsWith( " " ))
+                if (s.Contains( this.Delimiter ) || s.Contains( this.OpenQuote ) || s.Contains( this.CloseQuote ) || s.StartsWith( " " ) || s.EndsWith( " " ))
                 {
                     result.Append( "\"" );  
-                    result.Append( s.Replace( config.CloseQuote.ToString(), config.CloseQuote.ToString() + config.CloseQuote ) );
+                    result.Append( s.Replace( this.CloseQuote.ToString(), this.CloseQuote.ToString() + this.CloseQuote ) );
                     result.Append( "\"" );
                 }
                 else
@@ -56,26 +155,32 @@ namespace MGui.Datatypes
             return result.ToString();
         }
 
-        public static string[] ReadFields( string v, Config config = null )
+        /// <summary>
+        /// Reads a set of fields from a delimited string.
+        /// Like <see cref="string.Split"/> but with escapement.
+        /// </summary>                                          
+        public string[] ReadFields( string text )
         {                                     
             List<string> result = new List<string>();
-            ParseFields( result, v, config );
+            this.ParseFields( result, text );
             return result.ToArray();
         }
 
-        public static int CountFields( string v, Config config = null )
+        /// <summary>
+        /// Similar to <see cref="ReadFields"/> but avoid unnecessary parsing when
+        /// only the number of fields is required.
+        /// </summary>                         
+        public int CountFields( string v )
         {   
-            return ParseFields( null, v, config );
+            return this.ParseFields( null, v );
         }
 
-        private static int ParseFields( List<string> result, string text, Config config = null )
+        private int ParseFields( List<string> result, string text )
         {
-            config = config ?? Config.Default;
-
-            const int START = 0;
-            const int TEXT = 1;
-            const int IN_QUOTES = 2;
-            const int END_QUOTES = 3;
+            const int START = 0; // initial whitespace
+            const int TEXT = 1; // text or...
+            const int IN_QUOTES = 2; // ...quoted text
+            const int END_QUOTES = 3; // after quotes (no more text expected)
 
             int fieldStart = 0;
             int startBeforeQuotes = 0;
@@ -84,7 +189,7 @@ namespace MGui.Datatypes
             int numberOfFields = 0;
             bool needToRemoveDoubleQuotes = false;
 
-            Debug.WriteLine("------------------------");
+            //Debug.WriteLine("------------------------");
 
             for (int n = 0; n <= text.Length; n++)
             {
@@ -92,7 +197,7 @@ namespace MGui.Datatypes
 
                 if (n == text.Length)
                 {
-                    c = config.Delimiter;
+                    c = this.Delimiter;
                 }
                 else
                 {
@@ -105,15 +210,17 @@ namespace MGui.Datatypes
                 //Debug.Write( c );
                 //Debug.Write( " " );
 
-                if (c == config.Delimiter)
+                if (c == this.Delimiter)
                 {                    
                     if (stage != IN_QUOTES)
                     {
                         //Debug.Write( "end field " );
+                        bool trimEnd = true;
 
                         if (stage != END_QUOTES)
                         {
                             fieldEnd = n;
+                            trimEnd = false;
                         }
 
                         if (result != null)
@@ -122,7 +229,13 @@ namespace MGui.Datatypes
 
                             if (needToRemoveDoubleQuotes)
                             {
-                                field = field.Replace( config.CloseQuote.ToString() + config.CloseQuote, config.CloseQuote.ToString() );
+                                // TODO: Marginally inefficient
+                                field = field.Replace( this.CloseQuote.ToString() + this.CloseQuote, this.CloseQuote.ToString() );
+                            }
+
+                            if (trimEnd)
+                            {
+                                field = field.TrimEnd(); // TODO: Marginally inefficient
                             }
 
                             result.Add( field );
@@ -133,7 +246,7 @@ namespace MGui.Datatypes
                         stage = START;
                     }
                 }
-                else if (c == config.OpenQuote && stage == START)
+                else if (c == this.OpenQuote && stage == START)
                 {        
                     //Debug.Write( "start quote " );
 
@@ -141,11 +254,11 @@ namespace MGui.Datatypes
                     fieldStart = n + 1;
                     stage = IN_QUOTES;
                 }
-                else if (c == config.CloseQuote)
+                else if (c == this.CloseQuote)
                 {
                     if (stage == IN_QUOTES)
                     {
-                        if (n != text.Length - 1 && text[n + 1] == config.CloseQuote)
+                        if (n != text.Length - 1 && text[n + 1] == this.CloseQuote)
                         {
                             //Debug.Write( "double close quote (ignored) " );
 
@@ -183,16 +296,24 @@ namespace MGui.Datatypes
         }
     }
 
-    public class Spreadsheet<T>
+    /// <summary>
+    /// Represents a data matrix read from a file.
+    /// </summary>
+    /// <typeparam name="TCell">Type of data</typeparam>
+    public class Spreadsheet<TCell>
     {
         public readonly string Title;
         public readonly string[] RowNames;
         public readonly string[] ColNames;
-        public readonly T[,] Data;
+        public readonly TCell[,] Data;
         public readonly int NumRows;
-        public readonly int NumCols;
+        public readonly int NumCols;                            
 
-        private Spreadsheet( string title, string[] rowNames, string[] colNames, T[,] data, int numRows, int numCols )
+        /// <summary>
+        /// CONSTRUCTOR
+        /// PRIVATE, see <see cref="SpreadsheetReader.Read(string)"/>
+        /// </summary>
+        private Spreadsheet( string title, string[] rowNames, string[] colNames, TCell[,] data, int numRows, int numCols )
         {
             this.Title = title;
             this.RowNames = rowNames;
@@ -202,32 +323,58 @@ namespace MGui.Datatypes
             this.NumCols = numCols;      
         }
 
-        private static Converter<string, T> GetConverter()
+        /// <summary>
+        /// CONSTRUCTOR
+        /// PRIVATE, see <see cref="Subset"/>
+        /// </summary>          
+        private Spreadsheet( Spreadsheet<TCell> origin, int[] rows, int[] cols )
         {
-            if (typeof( T ) == typeof( double ))
+            if (rows == null)
             {
-                return z => (T)(object)double.Parse( z );
+                rows = Enumerable.Range( 0, origin.NumRows ).ToArray();
             }
-            else if (typeof( T ) == typeof( int ))
+
+            if (cols == null)
             {
-                return z => (T)(object)int.Parse( z );
+                cols = Enumerable.Range( 0, origin.NumCols ).ToArray();
             }
-            else if (typeof( T ) == typeof( string ))
+
+            RowNames = origin.RowNames.Extract( rows );
+            ColNames = origin.ColNames.Extract( cols );
+            NumRows = rows.Length;
+            NumCols = cols.Length;
+
+            Data = new TCell[NumRows, NumCols];
+
+            for (int row = 0; row < NumRows; row++)
             {
-                return z => (T)(object)z;
-            }
-            else
-            {
-                throw new InvalidOperationException( "Error" );
+                for (int col = 0; col < NumCols; col++)
+                {
+                    int oRow = rows[row];
+                    int oCol = cols[col];
+
+                    Data[row, col] = origin[oRow, oCol];
+                }
             }
         }
 
-        public T this[int row, int col]
+        /// <summary>
+        /// Creates a subset of the current sheet.
+        /// </summary>
+        /// <param name="rows">Rows to use in the subset, or NULL for all.</param>
+        /// <param name="cols">Columns to use in the subset, or NULL for all.</param>
+        /// <returns>A copy of the subset of the current spreadsheet</returns>
+        public Spreadsheet<TCell> Subset( int[] rows, int[] cols )
+        {
+            return new Spreadsheet<TCell>( this, rows, cols );
+        }
+
+        public TCell this[int row, int col]
         {
             get { return Data[row, col]; }
-        }
+        }                                
 
-        public static Spreadsheet<T> Read( string fileName, bool hasRowNames, bool hasColNames, Converter<string, T> converter = null, Spreadsheet.ProgressDelegate progressReporter = null )
+        internal static Spreadsheet<TCell> InternalRead( string fileName, SpreadsheetReader reader, Converter<string, TCell> converter)
         {
             if (string.IsNullOrWhiteSpace( fileName ))
             {
@@ -236,26 +383,21 @@ namespace MGui.Datatypes
 
             string title = fileName;
             int NumRows = 0;
-            int NumCols = 0;
-
-            if (converter == null)
-            {
-                converter = GetConverter();
-            }
+            int NumCols = 0;   
 
             // INITIAL READ TO GET SIZE OF DATA   
             using (StreamReader sr = new StreamReader( fileName ))
             {   
-                if (hasColNames)
+                if (reader.HasColNames)
                 {
                     sr.ReadLine();
                 }
 
-                int fields = Spreadsheet.CountFields( sr.ReadLine() );
+                int fields = reader.CountFields( sr.ReadLine() );
 
                 NumRows++;
 
-                NumCols = hasRowNames ? fields - 1 : fields;
+                NumCols = reader.HasRowNames ? fields - 1 : fields;
 
                 while (!sr.EndOfStream)
                 {
@@ -270,19 +412,19 @@ namespace MGui.Datatypes
                 }
             }
 
-            T[,] Data = new T[NumRows, NumCols];
+            TCell[,] Data = new TCell[NumRows, NumCols];
             string[] RowNames = new string[NumRows];
             string[] ColNames;
 
             using (StreamReader sr = new StreamReader( fileName ))
             {
                 // READ OR CREATE COLUMN NAMES
-                if (hasColNames)
+                if (reader.HasColNames)
                 {
                     // First row name is blank
-                    string[] colNameData = Spreadsheet.ReadFields( sr.ReadLine() );
+                    string[] colNameData = reader.ReadFields( sr.ReadLine() );
 
-                    if (hasRowNames)
+                    if (reader.HasRowNames)
                     {
                         ColNames = new string[colNameData.Length - 1];
                         Array.Copy( colNameData, 1, ColNames, 0, colNameData.Length - 1 );
@@ -311,7 +453,7 @@ namespace MGui.Datatypes
 
                 while (!sr.EndOfStream)
                 {
-                    string[] lineData = Spreadsheet.ReadFields( sr.ReadLine() );
+                    string[] lineData = reader.ReadFields( sr.ReadLine() );
 
                     if (lineData.Length == 1 && lineData[0] == "")
                     {
@@ -320,7 +462,7 @@ namespace MGui.Datatypes
 
                     int dataCol;
 
-                    if (hasRowNames)
+                    if (reader.HasRowNames)
                     {
                         dataCol = 1;
                         RowNames[rowIndex] = lineData[0];
@@ -339,11 +481,11 @@ namespace MGui.Datatypes
                         colIndex++;
                     }
 
-                    Assert( colIndex == NumCols, "The number of columns is different for row " + rowIndex + " of the CSV file \"" + title + "\". Check the CSV file for errors." );
+                    Assert( colIndex == NumCols, $"Row {rowIndex} of the CSV file (filename = \"{title}\") has {colIndex} columns but at least one other row has {NumCols} columns. Check the CSV file for errors." );
 
-                    if (progressReporter != null)
+                    if (reader.Progress != null)
                     {
-                        if (!progressReporter( rowIndex, NumRows ))
+                        if (!reader.Progress( rowIndex, NumRows ))
                         {
                             return null;
                         }
@@ -355,7 +497,7 @@ namespace MGui.Datatypes
                 Assert( rowIndex == NumRows, "Did not load all data for the CSV file \"" + title + "\". Check the CSV file for errors." );
             }
 
-            return new Spreadsheet<T>(title, RowNames, ColNames, Data, NumRows, NumCols);
+            return new Spreadsheet<TCell>(title, RowNames, ColNames, Data, NumRows, NumCols);
         }  
 
         /// <summary>
@@ -364,7 +506,7 @@ namespace MGui.Datatypes
         /// <param name="colTitles">One or more titles</param>
         public int FindColumn( params string[] colTitles )
         {
-            return InternalFind( colTitles, ColNames, "column", true ); 
+            return InternalFind( colTitles, ColNames, typeof( Column ), true ); 
         }/// 
 
         [Obsolete]
@@ -387,10 +529,10 @@ namespace MGui.Datatypes
         /// <param name="colTitles">One or more titles</param>
         public int TryFindColumn( params string[] colTitles )
         {
-            return InternalFind( colTitles, ColNames, "column", false );
+            return InternalFind( colTitles, ColNames, typeof( Column ), false );
         }
 
-        private int InternalFind( string[] tries, string[] exists, string method, bool throwOnError )
+        private int InternalFind( string[] tries, IReadOnlyList< string> exists, Type method, bool throwOnError )
         {
             if (tries.Length == 0)
             {
@@ -403,7 +545,7 @@ namespace MGui.Datatypes
             {
                 int n = -1;
 
-                for (int m = 0; m < exists.Length; m++)
+                for (int m = 0; m < exists.Count; m++)
                 {
                     if (exists[m].ToUpper() == colTitle.ToUpper())
                     {
@@ -432,19 +574,20 @@ namespace MGui.Datatypes
             return result;
         }
 
-        private void RaiseError( string[] tried, string[] exists, string method, string problem )
+        private void RaiseError( string[] tried, IReadOnlyList<string> exists, Type t, string problem )
         {
-            throw new KeyNotFoundException( "Expected to find a " + method.ToUpper() + " with any of the titles {\"" + string.Join( "\", \"", tried ) + "\"} in the \"" + Title + "\" data but there are "+problem.ToUpper()+" matching " + method + "s in the array {\"" + string.Join( "\", \"", exists ) + "\"}. The names are not case sensitive. Check the CSV file for errors and make sure the settings are correct." );
+            string method = t.Name;
+            throw new KeyNotFoundException( "Expected to find a " +method.ToUpper() + " with any of the titles {\"" + string.Join( "\", \"", tried ) + "\"} in the \"" + Title + "\" data but there are "+problem.ToUpper()+" matching " + method + "s in the array {\"" + string.Join( "\", \"", exists ) + "\"}. The names are not case sensitive. Check the CSV file for errors and make sure the settings are correct." );
         }
 
         public int TryFindRow( params string[] rowTitles )
         {
-            return InternalFind( rowTitles, RowNames, "row", false );
+            return InternalFind( rowTitles, RowNames, typeof( Row ), false );
         }
 
         public int FindRow( params string[] rowTitles )
         {
-            return InternalFind( rowTitles, RowNames, "row", true );
+            return InternalFind( rowTitles, RowNames, typeof( Row ), true );
         }
 
         private static void Assert( bool condition, string message )
@@ -458,9 +601,9 @@ namespace MGui.Datatypes
         /// <summary>
         /// Copies a column into an array.
         /// </summary>                    
-        public T[] CopyColumn( int colIndex )
+        public TCell[] CopyColumn( int colIndex )
         {
-            T[] result = new T[NumRows];
+            TCell[] result = new TCell[NumRows];
 
             for (int row = 0; row < result.Length; row++)
             {
@@ -473,9 +616,9 @@ namespace MGui.Datatypes
         /// <summary>
         /// Copies a row into an array.
         /// </summary>                   
-        public T[] CopyRow( int rowIndex )
+        public TCell[] CopyRow( int rowIndex )
         {
-            T[] result = new T[NumCols];
+            TCell[] result = new TCell[NumCols];
 
             for (int col = 0; col < result.Length; col++)
             {
@@ -484,7 +627,210 @@ namespace MGui.Datatypes
 
             return result;
         }
-    }                             
+
+        public RowCollection Rows => new RowCollection( this );
+
+        public ColumnCollection Columns => new ColumnCollection( this );
+
+        public abstract class HeaderCollection<THeader> : IReadOnlyList<THeader>
+        {
+            protected readonly Spreadsheet<TCell> _spreadsheet;
+
+            public HeaderCollection( Spreadsheet<TCell> spreadsheet )
+            {
+                this._spreadsheet = spreadsheet;
+            }
+
+            public abstract int Count { get; }
+
+            public abstract THeader this[int index] { get; }
+
+            public THeader this[params string[] possibleNames]
+            {
+                get
+                {
+                    return Find( possibleNames );
+                }
+            }
+
+            public abstract IReadOnlyList<string> Names { get; }
+
+            public IEnumerator<THeader> GetEnumerator()
+            {
+                for (int n = 0; n < Count; n++)
+                {
+                    yield return this[n];
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public THeader Find( params string[] possibleNames )
+            {
+                return this[FindIndex( possibleNames )];
+            }
+
+            public THeader TryFind( params string[] possibleNames )
+            {
+                int index = TryFindIndex( possibleNames );
+
+                if (index != -1)
+                {
+                    return this[index];
+                }
+                else
+                {
+                    return default( THeader );
+                }
+            }
+
+            public bool Contains( params string[] possibleNames )
+            {
+                return TryFindIndex( possibleNames ) != -1;
+            }
+
+            public int FindIndex( params string[] possibleNames )
+            {
+                return _spreadsheet.InternalFind(possibleNames, Names, typeof( THeader ), true );
+            }
+
+            public int TryFindIndex( params string[] possibleNames )
+            {
+                return _spreadsheet.InternalFind( possibleNames, Names, typeof( THeader ), false );
+            }
+        }
+
+        public class ColumnCollection : HeaderCollection<Column>
+        {     
+            public ColumnCollection( Spreadsheet<TCell> spreadsheet ) 
+                :base( spreadsheet )
+            {
+                // NA
+            }
+
+            public override int Count => _spreadsheet.NumCols;
+
+            public override IReadOnlyList<string> Names => _spreadsheet.ColNames;
+
+            public override Column this[int columnIndex] => new Column( _spreadsheet, columnIndex );   
+        }
+
+        public class RowCollection : HeaderCollection<Row>
+        {                             
+            public RowCollection( Spreadsheet<TCell> spreadsheet )
+                : base( spreadsheet )
+            {
+                // NA
+            }
+
+            public override int Count => _spreadsheet.NumRows;
+
+            public override IReadOnlyList<string> Names => _spreadsheet.RowNames;
+
+            public override Row this[int rowIndex]=> new Row( _spreadsheet, rowIndex );       
+        }    
+
+        public class Row : IReadOnlyList<TCell>
+        {
+            public readonly int Index;
+            public readonly Spreadsheet<TCell> Spreadsheet;
+
+            public Row( Spreadsheet<TCell> spreadsheet, int rowIndex )
+            {
+                this.Spreadsheet = spreadsheet;
+                this.Index = rowIndex;
+            }
+
+            public TCell this[int column]=> Spreadsheet[Index, column];
+
+            public string Name => Spreadsheet.RowNames[Index];
+            public int Count => Spreadsheet.NumCols;
+
+            public IEnumerator<TCell> GetEnumerator()
+            {
+                for (int col = 0; col < Spreadsheet.NumCols; col++)
+                {
+                    yield return Spreadsheet[Index, col];
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
+        public class Column : IReadOnlyList<TCell>
+        {
+            public readonly int Index;
+            private Spreadsheet<TCell> _spreadsheet;
+
+            public Column( Spreadsheet<TCell> spreadsheet, int column )
+            {
+                this._spreadsheet = spreadsheet;
+                this.Index = column;
+            }
+
+            public TCell this[int row] => _spreadsheet[row, Index];
+
+            public string Name => _spreadsheet.ColNames[Index];
+            public int Count => _spreadsheet.NumRows;
+
+            public IEnumerator<TCell> GetEnumerator()
+            {
+                for (int row = 0; row < _spreadsheet.NumRows; row++)
+                {
+                    yield return _spreadsheet[row, Index];
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+    }
+
+    public struct Cell
+    {
+        private string _string;
+
+        public Cell( string @string)
+        {
+            _string = @string;
+        }   
+
+        public string String
+        {
+            get
+            {
+                return _string;
+            }
+            set
+            {
+                _string = value;
+            }
+        }
+
+        public int Int32
+        {
+            get
+            {
+                return int.Parse( String );
+            }
+            set
+            {
+                String = value.ToString();
+            }
+        }
+
+        public static implicit operator string( Cell cell )
+        {
+            return cell.String;
+        }
+
+        public static implicit operator int( Cell cell )
+        {
+            return cell.Int32;
+        }
+    }
 
     public static class MatrixExtensions
     {

@@ -154,10 +154,62 @@ namespace MGui.Controls
             ctrlInfo.ControlValue = ctrlInfo.Path.DefaultValue;
         }
 
+        public TableLayoutPanel AutoBind( Type type )
+        {
+            return AutoBind( PropertyPath<T, object>.ReflectAll( type ) );
+        }
+
+        public TableLayoutPanel AutoBind( params Expression<PropertyPath<T, object>.Property>[] properties )
+        {
+            return AutoBind( properties.Select( z => new PropertyPath<T, object>( z ) ).ToArray() );
+        }
+
+        public TableLayoutPanel AutoBind( params PropertyPath<T, object>[] properties )
+        {
+            TableLayoutPanel container = new TableLayoutPanel()
+            {
+                Visible = true,
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            };
+
+            container.ColumnStyles.Add( new ColumnStyle( SizeType.AutoSize, 100.0f ) );
+            container.ColumnStyles.Add( new ColumnStyle( SizeType.Percent, 100.0f ) );
+            container.ColumnStyles.Add( new ColumnStyle( SizeType.AutoSize, 100.0f ) );
+
+            for (int n=0; n < properties.Length; n++)
+            {
+                var path = properties[n];
+                var type = path.Last.PropertyType;
+                Binder binder = this.BinderCollection.FindSuitableBinder( type );
+                Label label = new Label()
+                {
+                    Text = GetPropertyName( path ),
+                    Visible = true,
+                    AutoSize = true,
+                };
+
+                Control control = binder.CreateControl( type );
+                control.Visible = true;
+
+                container.RowStyles.Add( new RowStyle( SizeType.AutoSize, 100.0f ) );
+                container.Controls.Add( label, 0, n );
+                container.Controls.Add( control, 1, n );
+            }
+
+            return container;
+        }
+
         public void Bind( Control control, Expression<PropertyPath<T, object>.Property> property )
         {
-            // Get property path
             var path = new PropertyPath<T, object>( property );
+            Bind( control, path );
+        }
+
+        public void Bind( Control control, PropertyPath<T, object> path )
+        {
+            // Get property path                                       
             var propType = path.Last.PropertyType;
             var binder = this.BinderCollection.FindSuitableBinder( control, path.Last.PropertyType );
 
@@ -174,7 +226,6 @@ namespace MGui.Controls
             {
                 StringBuilder sb = new StringBuilder();
                 CategoryAttribute cat = ctrlInfo.Path.Last.GetCustomAttribute<CategoryAttribute>();
-                DisplayNameAttribute namer = ctrlInfo.Path.Last.GetCustomAttribute<DisplayNameAttribute>();
                 DescriptionAttribute desc = ctrlInfo.Path.Last.GetCustomAttribute<DescriptionAttribute>();
 
                 if (cat != null)
@@ -182,14 +233,7 @@ namespace MGui.Controls
                     sb.Append( cat.Category.ToBold() + ": " );
                 }
 
-                if (namer != null)
-                {
-                    sb.Append( namer.DisplayName.ToBold() );
-                }
-                else
-                {
-                    sb.Append( property.Name.ToBold() );
-                }
+                sb.Append( GetPropertyName( path ).ToBold() );
 
                 if (desc != null)
                 {
@@ -220,6 +264,20 @@ namespace MGui.Controls
             }
 
             control.MouseUp += Control_MouseUp;
+        }
+
+        private static string GetPropertyName( PropertyPath<T, object> path )
+        {
+            DisplayNameAttribute namer = path.Last.GetCustomAttribute<DisplayNameAttribute>();
+
+            if (namer != null)
+            {
+                return( namer.DisplayName );
+            }
+            else
+            {
+                return( path.Last.Name );
+            }
         }
 
         private void Control_MouseUp( object sender, MouseEventArgs e )

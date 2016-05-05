@@ -95,7 +95,7 @@ namespace MGui.Controls
         private void UpdateAppearance()
         {
             base.ForeColor = ColourHelper.ComplementaryColour( base.BackColor );
-            base.Text = ColourHelper.ColourToName( base.BackColor );
+            base.Text = ColourHelper.ColourToName( base.BackColor, true );
             base.Size = new Size( 128, 29 );
         }
 

@@ -50,7 +50,7 @@ namespace MSerialisers
         {
             if (x is string[])
             {           
-                return Spreadsheet.WriteFields((string[])x );
+                return SpreadsheetReader.Default.WriteFields((string[])x );
             }
 
             return Convert.ToString( x );
@@ -60,7 +60,7 @@ namespace MSerialisers
         {
             if (t == typeof( string[] ))
             {
-                return Spreadsheet.ReadFields( x );
+                return SpreadsheetReader.Default.ReadFields( x );
             }
 
             return Convert.ChangeType( x, t );
