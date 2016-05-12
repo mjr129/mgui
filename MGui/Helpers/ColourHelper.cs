@@ -13,6 +13,9 @@ namespace MGui
     {
         private static Dictionary<int, string> __colourNames;
 
+        /// <summary>
+        /// Returns white for dark colours and black for light colours.
+        /// </summary>                                                 
         public static Color ComplementaryColour( Color colour )
         {
             int b = (colour.R * 2 + colour.G * 2 + colour.B ) / 5;
@@ -74,6 +77,9 @@ namespace MGui
             return colour.R.ToString() + ", " + colour.G + ", " + colour.B;
         }
 
+        /// <summary>
+        /// Shows the colour editor.
+        /// </summary>              
         public static bool EditColor( ref Color colour )
         {
             using (ColorDialog cd = new ColorDialog())

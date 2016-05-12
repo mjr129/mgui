@@ -9,15 +9,20 @@ using System.Threading.Tasks;
 namespace MGui.Helpers
 {
     public static class EnumHelper
-    {
+    {   
+        /// <summary>
+        /// (MJR) (EXTENSION)
+        /// Returns if the enum contains the specified flag.
+        /// </summary>         
         public static bool Has<T>( this T self, T flag )
              where T : struct, IComparable, IFormattable, IConvertible // aka. Enum
-        {
+        {     
             return (Convert.ToInt32( self ) & Convert.ToUInt32( flag )) != 0;
         }
 
         /// <summary>
-        /// (MJR) Converts an enum to a string accounting for NameAttribute attributes.
+        /// (MJR) (EXTENSION)
+        /// Converts an enum to a string accounting for NameAttribute attributes.
         /// </summary>
         public static string ToUiString( this Enum @enum )
         {
@@ -38,7 +43,8 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (MJR) Converts an enum to a string accounting for DescriptionAttribute attributes.
+        /// (MJR) (EXTENSION)
+        /// Converts an enum to a string accounting for DescriptionAttribute attributes.
         /// </summary>
         public static string ToDescription( Enum @enum )
         {

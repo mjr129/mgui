@@ -730,6 +730,9 @@ namespace MGui.Helpers
             return result;
         }
 
+        /// <summary>
+        /// Wraps a <see cref="Comparison{T}"/> into an <see cref="IComparer{T}"/>.
+        /// </summary>                      
         private class ComparisonComparer<T> : IComparer<T>
         {
             private Comparison<T> order;
@@ -743,6 +746,76 @@ namespace MGui.Helpers
             {
                 return order( x, y );
             }
+        }
+
+        /// <summary>
+        /// See <see cref="Hash(IEnumerable)"/>
+        /// </summary>                      
+        public static int HashTogether<T>( params T[] en )
+        {
+            return Hash((IEnumerable<T>) en );
+        }
+
+        /// <summary>
+        /// Hashes all the elements of an <see cref="IEnumerable"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of values to hash (required to avoid boxing of value types, which changes the hash)</typeparam>
+        /// <param name="en">Sequence containing elements</param>
+        /// <returns>The combined hash</returns>
+        public static int Hash<T>( IEnumerable<T> en )
+        {
+            int r = 0;
+
+            foreach (T x in en)
+            {
+                if (x != null)
+                {
+                    r = r.RotateLeft(1);
+                    r = r ^ x.GetHashCode();
+                }
+            }
+
+            return r;
+        }
+
+        /// <summary>
+        /// SequenceEqual for untyped arrays.
+        /// </summary>
+        /// <param name="a">First array</param>
+        /// <param name="b">Second array</param>
+        /// <returns>If arrays are equal</returns>
+        public static bool SequenceEqual( IEnumerable a, IEnumerable b )
+        {
+            if (a == null)
+            {
+                if (b == null)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else if (b == null)
+            {
+                return false;
+            }   
+
+            var enA = a.GetEnumerator();
+            var enB = b.GetEnumerator();
+
+            while (enA.MoveNext())
+            {
+                enB.MoveNext();
+
+                if (!enA.Current.Equals( enB.Current ))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         #region Obsolete wrappers 

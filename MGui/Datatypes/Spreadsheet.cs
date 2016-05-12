@@ -821,6 +821,18 @@ namespace MGui.Datatypes
             }
         }
 
+        public double Double
+        {
+            get
+            {
+                return double.Parse( String );
+            }
+            set
+            {
+                String = value.ToString();
+            }
+        }
+
         public static implicit operator string( Cell cell )
         {
             return cell.String;
@@ -829,6 +841,11 @@ namespace MGui.Datatypes
         public static implicit operator int( Cell cell )
         {
             return cell.Int32;
+        }
+
+        public static implicit operator double( Cell cell )
+        {
+            return cell.Double;
         }
     }
 
