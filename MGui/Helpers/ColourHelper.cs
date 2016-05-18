@@ -14,6 +14,41 @@ namespace MGui
         private static Dictionary<int, string> __colourNames;
 
         /// <summary>
+        /// Blends two colours.
+        /// </summary>
+        public static Color Blend( Color colorA, Color colorB, double amountA )
+        {
+            if (double.IsNaN( amountA ) || double.IsInfinity( amountA ))
+            {
+                // Error
+                return Color.Pink;
+            }
+            else if (amountA < 0)
+            {
+                // Error
+                return Color.Cyan;
+            }
+            else if (amountA > 1)
+            {
+                // Error
+                return Color.Magenta;
+            }
+
+            return Color.FromArgb( Blend( colorA.A, colorB.A, amountA ),
+                                  Blend( colorA.R, colorB.R, amountA ),
+                                  Blend( colorA.G, colorB.G, amountA ),
+                                  Blend( colorA.B, colorB.B, amountA ) );
+        }
+
+        /// <summary>
+        /// Blends two bytes.
+        /// </summary>
+        private static int Blend( byte byteA, byte byteB, double amountA )
+        {
+            return (int)(byteA + (byteB - byteA) * amountA);
+        }
+
+        /// <summary>
         /// Returns white for dark colours and black for light colours.
         /// </summary>                                                 
         public static Color ComplementaryColour( Color colour )

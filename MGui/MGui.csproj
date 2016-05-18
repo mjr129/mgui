@@ -46,6 +46,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\AboutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\AboutForm.Designer.cs">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\CtlFileSelector.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\CtlFileSelector.Designer.cs">
+      <DependentUpon>CtlFileSelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\CtlSplitter.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\CtlTableLayoutPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\CtlTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Datatypes\Binders.cs" />
     <Compile Include="Controls\CtlError.cs">
       <SubType>Component</SubType>
@@ -59,12 +80,14 @@
     <Compile Include="Controls\InputBox.Designer.cs">
       <DependentUpon>InputBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Datatypes\Counter.cs" />
     <Compile Include="Datatypes\EquivalencePool.cs" />
     <Compile Include="Datatypes\HashedArray.cs" />
     <Compile Include="Datatypes\IniSerialiser.cs" />
     <Compile Include="Datatypes\SettableInfo.cs" />
     <Compile Include="Datatypes\Spreadsheet.cs" />
     <Compile Include="Datatypes\ParseElementCollection.cs" />
+    <Compile Include="Datatypes\SwitchException.cs" />
     <Compile Include="FrmTest.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -86,6 +109,7 @@
     <Compile Include="Datatypes\PropertyPath.cs" />
     <Compile Include="Helpers\EnumHelper.cs" />
     <Compile Include="Helpers\FileHelper.cs" />
+    <Compile Include="Helpers\FormHelper.cs" />
     <Compile Include="Helpers\IntHelper.cs" />
     <Compile Include="Helpers\ListBoxHelper.cs" />
     <Compile Include="Helpers\WeakReferenceHelper.cs" />
@@ -98,11 +122,17 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Controls\AboutForm.resx">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\CtlBinder.resx">
       <DependentUpon>CtlBinder.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\CtlError.resx">
       <DependentUpon>CtlError.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\CtlFileSelector.resx">
+      <DependentUpon>CtlFileSelector.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\InputBox.resx">
       <DependentUpon>InputBox.cs</DependentUpon>
@@ -120,6 +150,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\MnuUndo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Open_6529.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

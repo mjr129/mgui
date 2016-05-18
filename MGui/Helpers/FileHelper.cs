@@ -55,14 +55,17 @@ namespace MGui.Helpers
             }               
         }
 
-        public static void Browse( TextBox textBox, string filter )
+        public static bool Browse( TextBox textBox, string filter )
         {
             string nfn = Browse( textBox.FindForm(), filter, textBox.Text );
 
             if (nfn != null)
             {
                 textBox.Text = nfn;
+                return true;
             }
+
+            return false;
         }
 
         public static string DateAndTimeFile()
@@ -73,6 +76,17 @@ namespace MGui.Helpers
         private static string DateAndTimeFile( DateTime now )
         {
             return DateTime.Now.ToString( "yyyy MM dd - HH mm ss" );
+        }
+
+        public static bool SetTextIfNotNull( this TextBox self, string newValue )
+        {
+            if (newValue != null)
+            {
+                self.Text = newValue;
+                return true;
+            }
+
+            return false;
         }
     }
 }

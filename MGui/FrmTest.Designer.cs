@@ -70,7 +70,7 @@
         #endregion
 
         private Controls.CtlColourEditor ctlColourEditor1;
-        private Controls.CtlError ctlError1;
+        private MGui.Controls.CtlError ctlError1;
         private System.Windows.Forms.Button button1;
     }
 }

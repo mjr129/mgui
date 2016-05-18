@@ -716,7 +716,7 @@ namespace MGui.Helpers
 
             for (int i = 0; i < numi; i++)
             {
-                if (i != 0 && (jagged[i].Length != jagged[i + 1].Length))
+                if (i != 0 && (jagged[i].Length != jagged[i - 1].Length))
                 {
                     throw new InvalidOperationException( "Attempt to flatten a jagged array where all elements are not of equal length." );
                 }
