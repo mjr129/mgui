@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MGui.Controls;
 using MGui.Datatypes;
 
 namespace MGui
@@ -12,7 +16,7 @@ namespace MGui
     /// <summary>
     /// Manages a list of binders.
     /// </summary>
-    public class BinderCollection
+    public class BinderCollection : IEnumerable<Binder>
     {
         private List<Binder> _all = new List<Binder>();
         public static BinderCollection Default = new BinderCollection( true );
@@ -34,10 +38,13 @@ namespace MGui
             if (populateWithDefaults)
             {
                 Add( new BinderTextBox() );
-                Add( new BinderTextBoxArray() );
                 Add( new BinderCheckBox() );
                 Add( new BinderRadioButton() );
                 Add( new BinderNumericUpDown() );
+                Add( new BinderCtlColour() );
+                Add( new BinderTextBoxArray() );
+                Add( new BinderComboBoxBoolean() );
+                Add( new BinderConversion(this) );
             }
         }
 
@@ -50,7 +57,7 @@ namespace MGui
         {
             foreach (Binder b in _all)
             {
-                if (b.CanHandle( dataType ))
+                if (b.CanHandle( dataType ) )
                 {
                     return b;
                 }
@@ -63,7 +70,7 @@ namespace MGui
         {
             foreach (Binder b in _all)
             {
-                if (b.CanHandle( control, dataType ))
+                if (b.CanHandle( control, dataType ) )
                 {
                     return b;
                 }
@@ -71,33 +78,136 @@ namespace MGui
 
             throw new InvalidOperationException( "Cannot find a Binder between " + control.GetType().Name + " and " + dataType.Name );
         }
+
+        public IEnumerator<Binder> GetEnumerator()
+        {
+            return ((IEnumerable<Binder>)this._all).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable<Binder>)this._all).GetEnumerator();
+        }
     }
 
     public abstract class Binder
     {
         public abstract Control CreateControl( Type dataType );
-        public abstract bool CanHandle( Control control );
-        public abstract bool CanHandle( Type dataType );
+        public abstract Type PreferredDataType { get; }
         public abstract object Get( Control control, Type dataType );
         public abstract void Set( Control control, object value, Type dataType );
-        public bool CanHandle( Control control, Type dataType )
+        public abstract bool CanHandle( Control control, Type dataType );
+        public abstract bool CanHandle( Type dataType );
+    }
+
+    public class BinderConversion : Binder
+    {
+        private readonly BinderCollection _collection;
+
+        private class Tup
         {
-            return CanHandle( control ) && CanHandle( dataType );
+            public readonly Binder Binder;
+            public readonly TypeConverter Converter;
+
+            public Tup( TypeConverter converter, Binder binder )
+            {
+                this.Converter = converter;
+                this.Binder = binder;
+            }
+        }
+
+        public BinderConversion( BinderCollection collection)
+        {
+            _collection = collection;
+        }
+
+        public override Type PreferredDataType => null;
+
+        public override bool CanHandle( Control control, Type dataType )
+        {
+            return CanHandle2( control, dataType ) != null;
+        }
+
+        public override bool CanHandle( Type dataType )
+        {
+            return CanHandle2( null, dataType ) != null;
+        }
+
+        private Tup CanHandle2( Control control, Type dataType)
+        {
+            TypeConverterAttribute attr = dataType.GetCustomAttribute<TypeConverterAttribute>();
+
+            if (attr == null)
+            {                 
+                return null;
+            }
+
+            Type converterType = Type.GetType( attr.ConverterTypeName );
+
+            if (converterType == null)
+            {                 
+                return null;
+            }
+
+            TypeConverter converter = (TypeConverter)Activator.CreateInstance( converterType );
+
+            foreach (Binder binder in _collection)
+            {
+                if (binder.PreferredDataType != null
+                    && ( control == null || binder.CanHandle( control, binder.PreferredDataType ) )
+                    && converter.CanConvertFrom( binder.PreferredDataType )
+                    && converter.CanConvertTo( binder.PreferredDataType ) )
+                {
+                    return new Tup( converter, binder );
+                }
+            }
+
+            return null;
+        }
+
+        public override Control CreateControl( Type dataType )
+        {
+            // Create
+            Tup b = CanHandle2( null, dataType );
+            return b.Binder.CreateControl( b.Binder.PreferredDataType );
+        }
+
+        public override object Get( Control control, Type dataType )
+        {
+            // Convert from binder's preferred type
+            Tup b = CanHandle2( control, dataType );
+            object value = b.Binder.Get( control, b.Binder.PreferredDataType );
+            return b.Converter.ConvertFrom( value );
+        }
+
+        public override void Set( Control control, object value, Type dataType )
+        {
+            // Convert to binder's preferred type
+            Tup b = CanHandle2( control, dataType );
+            value = b.Converter.ConvertTo( value, b.Binder.PreferredDataType );
+            b.Binder.Set( control, value, b.Binder.PreferredDataType );
         }
     }
 
     public abstract class Binder<TControl, TData> : Binder
         where TControl : Control, new()
     {
-        public override bool CanHandle( Control control )
+        private bool CanHandle( Control control )
         {
             return typeof( TControl ).IsAssignableFrom( control.GetType() );
         }
 
+        public override bool CanHandle( Control control, Type dataType )
+        {
+            return CanHandle( control ) && CanHandle( dataType );
+        }
+
         public override bool CanHandle( Type dataType )
         {
-             return typeof( TData ).IsAssignableFrom( dataType );
+            return typeof( TData ).IsAssignableFrom( dataType );
         }
+
+        public override Type PreferredDataType => typeof(TData);
 
         public override object Get( Control control, Type dataType )
         {
@@ -139,6 +249,8 @@ namespace MGui
         {
             control.Text = Convert.ToString( value );
         }
+
+        public override Type PreferredDataType => typeof( string );
     }
 
     internal class BinderTextBoxArray : Binder<TextBox, Array>
@@ -148,7 +260,9 @@ namespace MGui
             return dataType.IsArray 
                 && dataType.GetArrayRank() == 1
                 && typeof( IConvertible ).IsAssignableFrom( dataType.GetElementType() );
-        } 
+        }
+
+        public override Type PreferredDataType => typeof( string[] );
 
         protected override Array GetValue( TextBox control, Type dataType )
         {
@@ -185,6 +299,19 @@ namespace MGui
         }
     }
 
+    internal class BinderComboBoxBoolean : Binder<ComboBox, bool>
+    {
+        protected override bool GetValue( ComboBox control, Type dataType )
+        {
+            return control.SelectedIndex == 1;
+        }
+
+        protected override void SetValue( ComboBox control, bool value, Type dataType )
+        {
+            control.SelectedIndex = value ? 1 : 0;
+        }
+    }
+
     internal class BinderRadioButton : Binder<RadioButton, IConvertible>
     {
         protected override IConvertible GetValue( RadioButton control, Type dataType )
@@ -208,6 +335,19 @@ namespace MGui
         protected override void SetValue( NumericUpDown control, IConvertible value, Type dataType )
         {
             control.Value = Convert.ToDecimal( value );
+        }
+    }
+
+    internal class BinderCtlColour : Binder<CtlColourEditor, Color>
+    {
+        protected override Color GetValue( CtlColourEditor control, Type dataType )
+        {
+            return control.SelectedColor;
+        }
+
+        protected override void SetValue( CtlColourEditor control, Color value, Type dataType )
+        {
+            control.SelectedColor = value;
         }
     }
 }

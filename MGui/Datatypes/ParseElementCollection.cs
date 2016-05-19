@@ -18,7 +18,7 @@ namespace MGui.Datatypes
     {
         public override bool CanConvertTo( ITypeDescriptorContext context, Type destinationType )
         {
-            if (destinationType == typeof( string ))
+            if (typeof( IConvertible ).IsAssignableFrom( destinationType ))
             {
                 return true;
             }
@@ -28,7 +28,7 @@ namespace MGui.Datatypes
 
         public override bool CanConvertFrom( ITypeDescriptorContext context, Type sourceType )
         {
-            if (sourceType == typeof( string ))
+            if (typeof( IConvertible ).IsAssignableFrom( sourceType))
             {
                 return true;
             }
@@ -38,19 +38,14 @@ namespace MGui.Datatypes
 
         public override object ConvertFrom( ITypeDescriptorContext context, CultureInfo culture, object value )
         {
-            if (value is string)
-            {
-                return new ParseElementCollection( (string)value );
-            }
-
-            return base.ConvertFrom( context, culture, value );
+            return new ParseElementCollection(  value.ToString() );
         }
 
         public override object ConvertTo( ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType )
         {
-            if (destinationType == typeof( string ))
+            if (typeof( IConvertible ).IsAssignableFrom( destinationType ))
             {
-                return ((ParseElementCollection)value).ToStringSafe();
+                return Convert.ChangeType( ((ParseElementCollection)value).ToStringSafe(), destinationType );
             }
 
             return base.ConvertTo( context, culture, value, destinationType );
@@ -122,7 +117,7 @@ namespace MGui.Datatypes
         {
             return (collection == null || collection.Contents.Count == 0
                     || (collection.Contents.Count == 1 && string.IsNullOrWhiteSpace( collection.Contents[0].Value )));
-        }
+        }      
     }
 
     /// <summary>

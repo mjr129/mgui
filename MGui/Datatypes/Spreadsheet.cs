@@ -99,12 +99,33 @@ namespace MGui.Datatypes
         /// Reads a full spreadsheet.
         /// </summary>
         /// <typeparam name="T">Type of data to read</typeparam>
+        /// <param name="text">Text data of spreadsheet</param>
+        /// <param name="converter">Conversion of values to <typeparamref name="T"/> (NULL uses the default, if available)</param>
+        /// <returns>The spreadsheet</returns>
+        public Spreadsheet<T> ReadText<T>( string text, Converter<string, T> converter = null )
+        {
+            using (MemoryStream ms = new MemoryStream( Encoding.UTF8.GetBytes( text ) ))
+            {
+                using (StreamReader sr = new StreamReader( ms ))
+                {
+                    return Spreadsheet<T>.InternalRead( "INTERNAL_TEXT_DATA", sr, this, converter ?? GetConverter<T>() );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reads a full spreadsheet.
+        /// </summary>
+        /// <typeparam name="T">Type of data to read</typeparam>
         /// <param name="fileName">Filename of spreadsheet</param>
         /// <param name="converter">Conversion of values to <typeparamref name="T"/> (NULL uses the default, if available)</param>
         /// <returns>The spreadsheet</returns>
         public Spreadsheet<T> Read<T>( string fileName, Converter<string, T> converter = null)
-        {     
-            return Spreadsheet<T>.InternalRead( fileName, this, converter ?? GetConverter<T>() );
+        {
+            using (StreamReader sr = new StreamReader( fileName ))
+            {
+                return Spreadsheet<T>.InternalRead( fileName, sr, this, converter ?? GetConverter<T>() );
+            }
         }
 
         /// <summary>
@@ -114,7 +135,7 @@ namespace MGui.Datatypes
         /// <returns>The spreadsheet</returns>
         public Spreadsheet<Cell> Read( string fileName )
         {
-            return Spreadsheet<Cell>.InternalRead( fileName, this, z => new Cell( z ) );
+            return Read<Cell>( fileName );
         }
 
         /// <summary>
@@ -211,7 +232,7 @@ namespace MGui.Datatypes
                 //Debug.Write( " " );
 
                 if (c == this.Delimiter)
-                {                    
+                {
                     if (stage != IN_QUOTES)
                     {
                         //Debug.Write( "end field " );
@@ -247,7 +268,7 @@ namespace MGui.Datatypes
                     }
                 }
                 else if (c == this.OpenQuote && stage == START)
-                {        
+                {
                     //Debug.Write( "start quote " );
 
                     startBeforeQuotes = fieldStart;
@@ -273,7 +294,7 @@ namespace MGui.Datatypes
                         }
                     }
                 }
-                else
+                else if (!char.IsWhiteSpace( c ))
                 {
                     if (stage == END_QUOTES)
                     {
@@ -307,7 +328,7 @@ namespace MGui.Datatypes
         public readonly string[] ColNames;
         public readonly TCell[,] Data;
         public readonly int NumRows;
-        public readonly int NumCols;                            
+        public readonly int NumCols;
 
         /// <summary>
         /// CONSTRUCTOR
@@ -320,7 +341,7 @@ namespace MGui.Datatypes
             this.ColNames = colNames;
             this.Data = data;
             this.NumRows = numRows;
-            this.NumCols = numCols;      
+            this.NumCols = numCols;
         }
 
         /// <summary>
@@ -372,133 +393,124 @@ namespace MGui.Datatypes
         public TCell this[int row, int col]
         {
             get { return Data[row, col]; }
-        }                                
+        }
 
-        internal static Spreadsheet<TCell> InternalRead( string fileName, SpreadsheetReader reader, Converter<string, TCell> converter)
+        internal static Spreadsheet<TCell> InternalRead( string title, StreamReader sr, SpreadsheetReader reader, Converter<string, TCell> converter )
         {
-            if (string.IsNullOrWhiteSpace( fileName ))
-            {
-                throw new InvalidOperationException( "Filename is missing." );
-            }
-
-            string title = fileName;
             int NumRows = 0;
-            int NumCols = 0;   
+            int NumCols = 0;
 
             // INITIAL READ TO GET SIZE OF DATA   
-            using (StreamReader sr = new StreamReader( fileName ))
-            {   
-                if (reader.HasColNames)
-                {
-                    sr.ReadLine();
-                }
+            if (reader.HasColNames)
+            {
+                sr.ReadLine();
+            }
 
-                int fields = reader.CountFields( sr.ReadLine() );
+            int fields = reader.CountFields( sr.ReadLine() );
+
+            NumRows++;
+
+            NumCols = reader.HasRowNames ? fields - 1 : fields;
+
+            while (!sr.EndOfStream)
+            {
+                string line = sr.ReadLine();
+
+                if (line.Length == 0)
+                {
+                    break;
+                }
 
                 NumRows++;
-
-                NumCols = reader.HasRowNames ? fields - 1 : fields;
-
-                while (!sr.EndOfStream)
-                {
-                    string line = sr.ReadLine();
-
-                    if (line.Length == 0)
-                    {
-                        break;
-                    }
-
-                    NumRows++;
-                }
             }
 
             TCell[,] Data = new TCell[NumRows, NumCols];
             string[] RowNames = new string[NumRows];
             string[] ColNames;
 
-            using (StreamReader sr = new StreamReader( fileName ))
+            sr.BaseStream.Seek( 0, SeekOrigin.Begin );
+            sr.DiscardBufferedData();
+
+            // READ OR CREATE COLUMN NAMES
+            if (reader.HasColNames)
             {
-                // READ OR CREATE COLUMN NAMES
-                if (reader.HasColNames)
+                // First row name is blank
+                string[] colNameData = reader.ReadFields( sr.ReadLine() );
+
+                if (reader.HasRowNames)
                 {
-                    // First row name is blank
-                    string[] colNameData = reader.ReadFields( sr.ReadLine() );
-
-                    if (reader.HasRowNames)
-                    {
-                        ColNames = new string[colNameData.Length - 1];
-                        Array.Copy( colNameData, 1, ColNames, 0, colNameData.Length - 1 );
-                    }
-                    else
-                    {
-                        ColNames = colNameData;
-                    }
-
-                    NumCols = ColNames.Length;
+                    ColNames = new string[colNameData.Length - 1];
+                    Array.Copy( colNameData, 1, ColNames, 0, colNameData.Length - 1 );
                 }
                 else
                 {
-                    ColNames = new string[NumCols];
-
-                    for (int col = 0; col < NumCols; col++)
-                    {
-                        ColNames[col] = "C" + col;
-                    }
+                    ColNames = colNameData;
                 }
 
-                Assert( ColNames.Length == NumCols, "The number of column names (" + ColNames.Length + ") is different from number of columns (" + NumCols + "). Check the CSV file for errors." );
+                NumCols = ColNames.Length;
+            }
+            else
+            {
+                ColNames = new string[NumCols];
 
-                // READ DATA ENTRIES
-                int rowIndex = 0;
-
-                while (!sr.EndOfStream)
+                for (int col = 0; col < NumCols; col++)
                 {
-                    string[] lineData = reader.ReadFields( sr.ReadLine() );
-
-                    if (lineData.Length == 1 && lineData[0] == "")
-                    {
-                        break;
-                    }
-
-                    int dataCol;
-
-                    if (reader.HasRowNames)
-                    {
-                        dataCol = 1;
-                        RowNames[rowIndex] = lineData[0];
-                    }
-                    else
-                    {
-                        dataCol = 0;
-                        RowNames[rowIndex] = "R" + rowIndex;
-                    }
-
-                    int colIndex = 0;
-
-                    for (int c = dataCol; c < lineData.Length; c++)
-                    {
-                        Data[rowIndex, colIndex] = converter( lineData[c] );
-                        colIndex++;
-                    }
-
-                    Assert( colIndex == NumCols, $"Row {rowIndex} of the CSV file (filename = \"{title}\") has {colIndex} columns but at least one other row has {NumCols} columns. Check the CSV file for errors." );
-
-                    if (reader.Progress != null)
-                    {
-                        if (!reader.Progress( rowIndex, NumRows ))
-                        {
-                            return null;
-                        }
-                    }
-
-                    rowIndex++;
+                    ColNames[col] = "C" + col;
                 }
-
-                Assert( rowIndex == NumRows, "Did not load all data for the CSV file \"" + title + "\". Check the CSV file for errors." );
             }
 
-            return new Spreadsheet<TCell>(title, RowNames, ColNames, Data, NumRows, NumCols);
-        }  
+            Assert( ColNames.Length == NumCols, "The number of column names (" + ColNames.Length + ") is different from number of columns (" + NumCols + "). Check the CSV file for errors." );
+
+            // READ DATA ENTRIES
+            int rowIndex = 0;
+
+            while (!sr.EndOfStream)
+            {
+                string[] lineData = reader.ReadFields( sr.ReadLine() );
+
+                if (lineData.Length == 1 && lineData[0] == "")
+                {
+                    break;
+                }
+
+                int dataCol;
+
+                if (reader.HasRowNames)
+                {
+                    dataCol = 1;
+                    RowNames[rowIndex] = lineData[0];
+                }
+                else
+                {
+                    dataCol = 0;
+                    RowNames[rowIndex] = "R" + rowIndex;
+                }
+
+                int colIndex = 0;
+
+                for (int c = dataCol; c < lineData.Length; c++)
+                {
+                    Data[rowIndex, colIndex] = converter( lineData[c] );
+                    colIndex++;
+                }
+
+                Assert( colIndex == NumCols, $"Row {rowIndex} of the CSV file (filename = \"{title}\") has {colIndex} columns but at least one other row has {NumCols} columns. Check the CSV file for errors." );
+
+                if (reader.Progress != null)
+                {
+                    if (!reader.Progress( rowIndex, NumRows ))
+                    {
+                        return null;
+                    }
+                }
+
+                rowIndex++;
+            }
+
+            Assert( rowIndex == NumRows, "Did not load all data for the CSV file \"" + title + "\". Check the CSV file for errors." );
+
+            return new Spreadsheet<TCell>( title, RowNames, ColNames, Data, NumRows, NumCols );
+        }
 
         /// <summary>
         /// Gets the index of the column with any of the specified title(s).
