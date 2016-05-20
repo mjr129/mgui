@@ -627,5 +627,29 @@ namespace MGui.Helpers
         {
             return id.All( char.IsDigit );
         }
+
+        public static string After( this string self, string text )
+        {
+            int index = self.IndexOf( text );
+
+            if (index != -1)
+            {
+                return self.Substring( index + text.Length );
+            }
+
+            return string.Empty;
+        }
+
+        public static string Before( this string self, string text )
+        {
+            int index = self.IndexOf( text );
+
+            if (index != -1)
+            {
+                return self.Substring( 0, index );
+            }
+
+            return text;
+        }
     }
 }
