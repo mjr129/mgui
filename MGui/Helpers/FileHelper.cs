@@ -42,17 +42,31 @@ namespace MGui.Helpers
 
         public static string Browse( IWin32Window form, string filter, string @default )
         {
-            using (OpenFileDialog ofd = new OpenFileDialog())
+            using (FileDialog ofd = new OpenFileDialog())
             {
-                ofd.FileName = @default;
+                return BrowseInternal( form, filter, @default, ofd );
+            }
+        }
 
-                if (ofd.ShowDialog( form ) == DialogResult.OK)
-                {
-                    return ofd.FileName;
-                }
+        public static string Save( IWin32Window form, string filter, string @default )
+        {
+            using (FileDialog ofd = new SaveFileDialog())
+            {
+                return BrowseInternal( form, filter, @default, ofd );
+            }
+        }
 
-                return null;
-            }               
+        private static string BrowseInternal( IWin32Window form, string filter, string @default, FileDialog ofd )
+        {
+            ofd.FileName = @default;
+            ofd.Filter = filter;
+
+            if (ofd.ShowDialog( form ) == DialogResult.OK)
+            {
+                return ofd.FileName;
+            }
+
+            return null;
         }
 
         public static bool Browse( TextBox textBox, string filter )
