@@ -64,7 +64,7 @@
             this.label1.Margin = new System.Windows.Forms.Padding(8, 8, 8, 16);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(52, 21);
-            this.label1.TabIndex = 3;
+            this.label1.TabIndex = 0;
             this.label1.Text = "label1";
             // 
             // button1
@@ -74,7 +74,7 @@
             this.button1.Margin = new System.Windows.Forms.Padding(8);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(128, 32);
-            this.button1.TabIndex = 1;
+            this.button1.TabIndex = 2;
             this.button1.Text = "OK";
             this.button1.UseVisualStyleBackColor = true;
             // 
@@ -85,7 +85,7 @@
             this.button2.Margin = new System.Windows.Forms.Padding(8);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(128, 32);
-            this.button2.TabIndex = 2;
+            this.button2.TabIndex = 3;
             this.button2.Text = "Cancel";
             this.button2.UseVisualStyleBackColor = true;
             // 
