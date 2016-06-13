@@ -95,6 +95,40 @@ namespace MGui.Datatypes
             }
         }
 
+        public void Write<T>( Spreadsheet<T> ss, string fileName, Func<T, string> converter = null )
+        {       
+            using (StreamWriter sw = new StreamWriter( fileName ))
+            {
+                if (this.HasColNames)
+                {
+                    if (this.HasRowNames)
+                    {
+                        sw.Write( "," );
+                    }
+
+                    sw.WriteLine( WriteFields( ss.ColNames ) );
+                }
+
+                foreach(var row in ss.Rows)
+                {
+                    if (this.HasRowNames)
+                    {
+                        sw.Write( WriteField( row.Name ));
+                        sw.Write( "," );
+                    }
+
+                    if (converter == null)
+                    {
+                        sw.WriteLine( WriteFields( row ));
+                    }
+                    else
+                    {                                  
+                        sw.WriteLine( WriteFields( row.Select<T, string>( converter ) ) );
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Reads a full spreadsheet.
         /// </summary>
@@ -152,28 +186,37 @@ namespace MGui.Datatypes
             }
 
             foreach (object xxx in fields)
-            {
-                string xx = xxx.ToString();
-                string s = Convert.ToString( xx );
+            {                                  
+                string s = Convert.ToString( xxx );
 
                 if (result.Length != 0)
                 {
                     result.Append( this.Delimiter );
                 }
 
-                if (s.Contains( this.Delimiter ) || s.Contains( this.OpenQuote ) || s.Contains( this.CloseQuote ) || s.StartsWith( " " ) || s.EndsWith( " " ))
-                {
-                    result.Append( "\"" );  
-                    result.Append( s.Replace( this.CloseQuote.ToString(), this.CloseQuote.ToString() + this.CloseQuote ) );
-                    result.Append( "\"" );
-                }
-                else
-                {
-                    result.Append( s );
-                }
+                result.Append( WriteField(s) );
             }
 
             return result.ToString();
+        }
+
+        public string WriteField(string s)
+        {
+            if (s == null)
+            {
+                return string.Empty;
+            }
+
+            if (s.Contains( this.Delimiter ) || s.Contains( this.OpenQuote ) || s.Contains( this.CloseQuote ) || s.StartsWith( " " ) || s.EndsWith( " " ))
+            {
+                return "\""
+                     + s.Replace( this.CloseQuote.ToString(), this.CloseQuote.ToString() + this.CloseQuote )
+                     + "\"";
+            }
+            else
+            {
+                return s;
+            }
         }
 
         /// <summary>
@@ -326,9 +369,13 @@ namespace MGui.Datatypes
         public readonly string Title;
         public readonly string[] RowNames;
         public readonly string[] ColNames;
+
+        /// <summary>
+        /// Data (rows, cols)
+        /// </summary>
         public readonly TCell[,] Data;
         public readonly int NumRows;
-        public readonly int NumCols;
+        public readonly int NumCols;  
 
         /// <summary>
         /// CONSTRUCTOR
@@ -342,6 +389,16 @@ namespace MGui.Datatypes
             this.Data = data;
             this.NumRows = numRows;
             this.NumCols = numCols;
+        }
+
+        public Spreadsheet( int nrow, int ncol )
+        {
+            Title = "Untitled spreadsheet of " + nrow + " rows and " + ncol + " columns";
+            RowNames = new string[nrow];
+            ColNames = new string[ncol];
+            Data = new TCell[nrow, ncol];
+            NumRows = nrow;
+            NumCols = ncol;
         }
 
         /// <summary>
@@ -393,6 +450,7 @@ namespace MGui.Datatypes
         public TCell this[int row, int col]
         {
             get { return Data[row, col]; }
+            set { Data[row, col] = value; }
         }
 
         internal static Spreadsheet<TCell> InternalRead( string title, StreamReader sr, SpreadsheetReader reader, Converter<string, TCell> converter )
@@ -640,6 +698,16 @@ namespace MGui.Datatypes
             return result;
         }
 
+        public static Spreadsheet<TCell> FromCsv( string fileName )
+        {
+            return SpreadsheetReader.Default.Read<TCell>( fileName );
+        }
+
+        public void SaveCsv( string fileName )
+        {
+            SpreadsheetReader.Default.Write( this, fileName );
+        }
+
         public RowCollection Rows => new RowCollection( this );
 
         public ColumnCollection Columns => new ColumnCollection( this );
@@ -758,7 +826,18 @@ namespace MGui.Datatypes
 
             public TCell this[int column]=> Spreadsheet[Index, column];
 
-            public string Name => Spreadsheet.RowNames[Index];
+            public string Name
+            {
+                get
+                {
+                    return Spreadsheet.RowNames[Index];
+                }
+                set
+                {
+                    Spreadsheet.RowNames[Index] = value;
+                }
+            }
+
             public int Count => Spreadsheet.NumCols;
 
             public IEnumerator<TCell> GetEnumerator()
@@ -785,7 +864,18 @@ namespace MGui.Datatypes
 
             public TCell this[int row] => _spreadsheet[row, Index];
 
-            public string Name => _spreadsheet.ColNames[Index];
+            public string Name
+            {
+                get
+                {
+                    return _spreadsheet.ColNames[Index];
+                }
+                set
+                {
+                    _spreadsheet.ColNames[Index] = value;
+                }
+            }
+
             public int Count => _spreadsheet.NumRows;
 
             public IEnumerator<TCell> GetEnumerator()
