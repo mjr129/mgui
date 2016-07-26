@@ -438,7 +438,7 @@ namespace MGui.Datatypes
                 string[] colNameData = reader.ReadFields( sr.ReadLine() );
 
                 if (reader.HasRowNames)
-                {
+                {   
                     ColNames = new string[colNameData.Length - 1];
                     Array.Copy( colNameData, 1, ColNames, 0, colNameData.Length - 1 );
                 }

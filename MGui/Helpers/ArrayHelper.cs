@@ -325,6 +325,18 @@ namespace MGui.Helpers
             return value;
         }
 
+        public static TValue GetOrDefault<TKey, TValue>( this Dictionary<TKey, TValue> dict, TKey key )
+        {
+            TValue value;
+
+            if (!dict.TryGetValue( key, out value ))
+            {
+                return default( TValue );
+            }
+
+            return value;
+        }
+
         /// <summary>
         /// (MJR) Returns the value of the [key], if not present returns [defaultValue].
         /// </summary>
