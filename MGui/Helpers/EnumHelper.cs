@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 namespace MGui.Helpers
 {
     public static class EnumHelper
-    {   
+    {
         /// <summary>
         /// (MJR) (EXTENSION)
         /// Returns if the enum contains the specified flag.
         /// </summary>         
         public static bool Has<T>( this T self, T flag )
-             where T : struct, IComparable, IFormattable, IConvertible // aka. Enum
-        {     
+            where T : struct, IComparable, IFormattable, IConvertible // aka. Enum
+        {
             return (Convert.ToInt32( self ) & Convert.ToUInt32( flag )) != 0;
         }
 
@@ -89,7 +89,7 @@ namespace MGui.Helpers
         {
             if (enumerable == null)
             {
-                return (T)Enum.ToObject( typeof( T ), 0 );
+                return (T)Enum.ToObject( typeof(T), 0 );
             }
 
             int flags = 0;
@@ -110,7 +110,7 @@ namespace MGui.Helpers
         public static IEnumerable<T> GetEnumFlags<T>()
             where T : struct, IComparable, IFormattable, IConvertible // aka. Enum
         {
-            HashSet<int> vals = Enum.GetValues( typeof( T ) ).Cast<int>().Unique();
+            HashSet<int> vals = Enum.GetValues( typeof(T) ).Cast<int>().Unique();
 
             foreach (int i in vals)
             {
@@ -127,7 +127,7 @@ namespace MGui.Helpers
         public static T[] GetEnumValues<T>()
             where T : struct, IComparable, IFormattable, IConvertible // aka. Enum
         {
-            return (T[])Enum.GetValues( typeof( T ) );
+            return (T[])Enum.GetValues( typeof(T) );
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace MGui.Helpers
         {
             Dictionary<string, T> res = new Dictionary<string, T>();
 
-            foreach (Enum val in Enum.GetValues( typeof( T ) ))
+            foreach (Enum val in Enum.GetValues( typeof(T) ))
             {
                 T t = (T)(object)val;
                 res[val.ToString().ToUpper()] = t;
@@ -147,6 +147,25 @@ namespace MGui.Helpers
             }
 
             return res;
+        }
+
+        /// <summary>
+        /// Uses an enum members' Name attribute to parse an enum.
+        /// </summary>                                            
+        public static T Parse<T>( string value, bool ignoreCase = true )
+            where T : struct, IComparable, IFormattable, IConvertible // aka. Enum
+        {                 
+            foreach (Enum t in Enum.GetValues(typeof( T ) ))
+            {
+                string name = ToUiString( t );
+
+                if (string.Compare( value, name, ignoreCase ) == 0)
+                {
+                    return (T)(object)t;
+                }
+            }
+
+            throw new InvalidOperationException( $"The string \"{value}\" cannot be converted into the enum type \"{typeof(T).Name}\". The available options are: \"{string.Join( "\", \"", GetEnumValues<T>() )}\"." );
         }
     }
 

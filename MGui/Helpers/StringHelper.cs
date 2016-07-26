@@ -651,5 +651,10 @@ namespace MGui.Helpers
 
             return text;
         }
+
+        public static int GetDecimalPlaces( string number )
+        {
+            return number.Length - number.IndexOf( '.' ) - 1;
+        }
     }
 }

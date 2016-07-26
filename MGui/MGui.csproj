@@ -58,6 +58,9 @@
     <Compile Include="Controls\CtlFileSelector.Designer.cs">
       <DependentUpon>CtlFileSelector.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\CtlImageBuffer.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\CtlSplitter.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -65,6 +68,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\CtlTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\CtlTreeView.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Datatypes\Binders.cs" />
@@ -84,6 +90,7 @@
     <Compile Include="Datatypes\EquivalencePool.cs" />
     <Compile Include="Datatypes\HashedArray.cs" />
     <Compile Include="Datatypes\IniSerialiser.cs" />
+    <Compile Include="Datatypes\Map.cs" />
     <Compile Include="Datatypes\SettableInfo.cs" />
     <Compile Include="Datatypes\Spreadsheet.cs" />
     <Compile Include="Datatypes\ParseElementCollection.cs" />

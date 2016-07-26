@@ -344,6 +344,16 @@ namespace MGui.Datatypes
             this.NumCols = numCols;
         }
 
+        public Spreadsheet( int rows, int cols )
+        {
+            this.Title = "Untitltled spreadsheet (" + rows + " rows, " + cols + " columns)";
+            this.RowNames = new string[rows];
+            this.ColNames = new string[cols];
+            this.Data = new TCell[rows, cols];
+            this.NumRows = rows;
+            this.NumCols = cols;
+        }
+
         /// <summary>
         /// CONSTRUCTOR
         /// PRIVATE, see <see cref="Subset"/>
@@ -390,9 +400,10 @@ namespace MGui.Datatypes
             return new Spreadsheet<TCell>( this, rows, cols );
         }
 
-        public TCell this[int row, int col]
+        public TCell this[ int row, int col ]
         {
             get { return Data[row, col]; }
+            set { Data[row, col] = value; }
         }
 
         internal static Spreadsheet<TCell> InternalRead( string title, StreamReader sr, SpreadsheetReader reader, Converter<string, TCell> converter )
@@ -797,6 +808,12 @@ namespace MGui.Datatypes
             }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
+        public void SaveCsv( string fileName )
+        {
+            // TODO: Commit this!
+            throw new NotImplementedException("This is in a later version of the repository I've not committed. Todo: commit this!");
         }
     }
 
