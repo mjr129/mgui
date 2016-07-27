@@ -459,7 +459,7 @@ namespace MGui.Datatypes
             return new Spreadsheet<TCell>( this, rows, cols );
         }
 
-        public TCell this[int row, int col]
+        public TCell this[ int row, int col ]
         {
             get { return Data[row, col]; }
             set { Data[row, col] = value; }
@@ -527,7 +527,7 @@ namespace MGui.Datatypes
                 string[] colNameData = reader.ReadFields( sr.ReadLine() );
 
                 if (reader.HasRowNames)
-                {
+                {   
                     ColNames = new string[colNameData.Length - 1];
                     Array.Copy( colNameData, 1, ColNames, 0, colNameData.Length - 1 );
                 }
@@ -956,6 +956,12 @@ namespace MGui.Datatypes
             }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
+        public void SaveCsv( string fileName )
+        {
+            // TODO: Commit this!
+            throw new NotImplementedException("This is in a later version of the repository I've not committed. Todo: commit this!");
         }
     }
 

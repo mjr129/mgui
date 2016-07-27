@@ -114,6 +114,7 @@ namespace MGui.Controls
             }
 
             _control.Text    = @default != null ? @default.ToString() : null;
+            _control.TabIndex = 1;
             _control.Visible = true;
             _control.Dock = DockStyle.Top;
             _control.Margin = new Padding( 8, 8, 8, 8 );

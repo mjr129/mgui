@@ -43,7 +43,7 @@ namespace MGui
         /// <summary>
         /// Blends two bytes.
         /// </summary>
-        private static int Blend( byte byteA, byte byteB, double amountA )
+        public static int Blend( byte byteA, byte byteB, double amountA )
         {
             return (int)(byteA + (byteB - byteA) * amountA);
         }
