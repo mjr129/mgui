@@ -102,5 +102,16 @@ namespace MGui.Helpers
 
             return false;
         }
+
+        /// <summary>
+        /// Changes the extension of a filename.
+        /// </summary>
+        /// <param name="fileName">Original filename</param>
+        /// <param name="extension">New extension, including the dot and anything new suffix to put before the dot.</param>
+        /// <returns>Filename with new extension</returns>
+        public static string ChangeExtension( string fileName, string extension )
+        {
+            return Path.Combine( Path.GetDirectoryName( fileName ), Path.GetFileNameWithoutExtension( fileName ) ) + extension;
+        }
     }
 }

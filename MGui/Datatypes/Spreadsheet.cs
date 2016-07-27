@@ -158,8 +158,20 @@ namespace MGui.Datatypes
         {
             using (StreamReader sr = new StreamReader( fileName ))
             {
-                return Spreadsheet<T>.InternalRead( fileName, sr, this, converter ?? GetConverter<T>() );
+                return Read( sr, fileName, converter );
             }
+        }
+
+        /// <summary>
+        /// Reads a full spreadsheet.
+        /// </summary>
+        /// <typeparam name="T">Type of data to read</typeparam>
+        /// <param name="fileName">Filename of spreadsheet</param>
+        /// <param name="converter">Conversion of values to <typeparamref name="T"/> (NULL uses the default, if available)</param>
+        /// <returns>The spreadsheet</returns>
+        public Spreadsheet<T> Read<T>( StreamReader streamReader, string title, Converter<string, T> converter = null )
+        {                           
+            return Spreadsheet<T>.InternalRead( title, streamReader, this, converter ?? GetConverter<T>() );
         }
 
         /// <summary>
@@ -457,37 +469,56 @@ namespace MGui.Datatypes
         {
             int NumRows = 0;
             int NumCols = 0;
+            TCell[,] Data;
+            List<TCell[]> DataNs;
+            string[] RowNames;
+            List<string> RowNamesNs;
+            string[] ColNames;
+            bool seekable = sr.BaseStream.CanSeek;
 
-            // INITIAL READ TO GET SIZE OF DATA   
-            if (reader.HasColNames)
+            if (seekable)
             {
-                sr.ReadLine();
-            }
-
-            int fields = reader.CountFields( sr.ReadLine() );
-
-            NumRows++;
-
-            NumCols = reader.HasRowNames ? fields - 1 : fields;
-
-            while (!sr.EndOfStream)
-            {
-                string line = sr.ReadLine();
-
-                if (line.Length == 0)
+                // INITIAL READ TO GET SIZE OF DATA   
+                if (reader.HasColNames)
                 {
-                    break;
+                    sr.ReadLine();
                 }
 
+                int fields = reader.CountFields( sr.ReadLine() );
+
                 NumRows++;
+
+                NumCols = reader.HasRowNames ? fields - 1 : fields;
+
+                while (!sr.EndOfStream)
+                {
+                    string line = sr.ReadLine();
+
+                    if (line.Length == 0)
+                    {
+                        break;
+                    }
+
+                    NumRows++;
+                }
+
+                Data = new TCell[NumRows, NumCols];
+                RowNames = new string[NumRows];
+                RowNamesNs = null;
+                DataNs = null;
+
+                sr.BaseStream.Seek( 0, SeekOrigin.Begin );
+                sr.DiscardBufferedData();
             }
-
-            TCell[,] Data = new TCell[NumRows, NumCols];
-            string[] RowNames = new string[NumRows];
-            string[] ColNames;
-
-            sr.BaseStream.Seek( 0, SeekOrigin.Begin );
-            sr.DiscardBufferedData();
+            else
+            {
+                Data = null;
+                RowNames = null;
+                RowNamesNs = new List<string>();
+                DataNs = new List<TCell[]>();
+                NumRows = -1;
+                NumCols = -1;
+            }
 
             // READ OR CREATE COLUMN NAMES
             if (reader.HasColNames)
@@ -536,23 +567,39 @@ namespace MGui.Datatypes
                 if (reader.HasRowNames)
                 {
                     dataCol = 1;
-                    RowNames[rowIndex] = lineData[0];
+
+                    WriteRowName( RowNames, RowNamesNs, rowIndex, lineData[0] );                                    
                 }
                 else
                 {
                     dataCol = 0;
-                    RowNames[rowIndex] = "R" + rowIndex;
+                    WriteRowName( RowNames, RowNamesNs, rowIndex, "R" + rowIndex );
                 }
 
                 int colIndex = 0;
 
-                for (int c = dataCol; c < lineData.Length; c++)
+                if (Data != null)
                 {
-                    Data[rowIndex, colIndex] = converter( lineData[c] );
-                    colIndex++;
+                    for (int c = dataCol; c < lineData.Length; c++)
+                    {      
+                        Data[rowIndex, colIndex] = converter( lineData[c] );
+                        colIndex++;
+                    }
                 }
+                else
+                {
+                    TCell[] temp = new TCell[lineData.Length - dataCol];
 
-                Assert( colIndex == NumCols, $"Row {rowIndex} of the CSV file (filename = \"{title}\") has {colIndex} columns but at least one other row has {NumCols} columns. Check the CSV file for errors." );
+                    for (int c = dataCol; c < lineData.Length; c++)
+                    {
+                        temp[colIndex] = converter( lineData[c] );
+                        colIndex++;
+                    }
+
+                    DataNs.Add( temp );
+                } 
+
+                Assert( !seekable || colIndex == NumCols, $"Row {rowIndex} of the CSV file (filename = \"{title}\") has {colIndex} columns but at least one other row has {NumCols} columns. Check the CSV file for errors." );
 
                 if (reader.Progress != null)
                 {
@@ -565,10 +612,28 @@ namespace MGui.Datatypes
                 rowIndex++;
             }
 
-            Assert( rowIndex == NumRows, "Did not load all data for the CSV file \"" + title + "\". Check the CSV file for errors." );
+            Assert( !seekable || rowIndex == NumRows, "Did not load all data for the CSV file \"" + title + "\". Check the CSV file for errors." );
 
-            return new Spreadsheet<TCell>( title, RowNames, ColNames, Data, NumRows, NumCols );
+            if (!seekable)
+            {
+                RowNames = RowNamesNs.ToArray();
+                Data = ArrayHelper.Flatten( DataNs );        
+            }
+
+            return new Spreadsheet<TCell>( title, RowNames, ColNames, Data, Data.GetLength( 0 ), Data.GetLength( 1 ) );
         }
+
+        private static void WriteRowName( string[] rowNames, List<string> rowNamesNs, int rowIndex, string v )
+        {
+            if (rowNames != null)
+            {
+                rowNames[rowIndex] = v;
+            }
+            else
+            {
+                rowNamesNs.Add( v );
+            }
+        }        
 
         /// <summary>
         /// Gets the index of the column with any of the specified title(s).
@@ -826,6 +891,8 @@ namespace MGui.Datatypes
 
             public TCell this[int column]=> Spreadsheet[Index, column];
 
+            public TCell this[Column column] => Spreadsheet[Index, column.Index];
+
             public string Name
             {
                 get
@@ -863,6 +930,8 @@ namespace MGui.Datatypes
             }
 
             public TCell this[int row] => _spreadsheet[row, Index];
+
+            public TCell this[Row row] => _spreadsheet[row.Index, Index];
 
             public string Name
             {

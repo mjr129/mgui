@@ -14,6 +14,47 @@ namespace MGui.Helpers
     public static class ArrayHelper
     {
         /// <summary>
+        /// Ensures array size is >= needed.
+        /// O(n)
+        /// </summary>      
+        public static void EnsureCapacity<T>( ref T[] array, int sizeNeeded, Func<int, T> creator = null )
+        {                   
+            if (array.Length > sizeNeeded)
+            {
+                return;
+            }
+
+            int newSize;
+
+            if (array.Length > (int.MaxValue / 2))
+            {
+                newSize = int.MaxValue;
+            }
+            else
+            {
+                newSize = array.Length * 2;
+            }
+
+            if (newSize < sizeNeeded)
+            {
+                newSize = sizeNeeded + 1;
+            }
+
+            T[] newArray = new T[newSize];
+            Array.Copy( array, newArray, array.Length );
+
+            if (creator != null)
+            {
+                for (int n = array.Length; n < newArray.Length; n++)
+                {
+                    newArray[n] = creator( n );
+                }
+            }
+
+            array = newArray;
+        }  
+
+        /// <summary>
         /// (MJR) (EXTENSION)
         /// Is the <paramref name="enumerable"/> empty?
         /// </summary>
@@ -708,15 +749,15 @@ namespace MGui.Helpers
         /// (MJR) (EXTENSION)
         /// Flattens a jagged array.
         /// </summary>              
-        public static double[,] Flatten( this double[][] jagged )
+        public static T[,] Flatten<T>( this IReadOnlyList<IReadOnlyList< T>> jagged )
         {
-            int numi = jagged.Length;
-            int numj = jagged[0].Length;
-            double[,] result = new double[numi, numj];
+            int numi = jagged.Count;                           
+            int numj = jagged[0].Count;
+            T[,] result = new T[numi, numj];
 
             for (int i = 0; i < numi; i++)
             {
-                if (i != 0 && (jagged[i].Length != jagged[i - 1].Length))
+                if (i != 0 && (jagged[i].Count != jagged[i - 1].Count))
                 {
                     throw new InvalidOperationException( "Attempt to flatten a jagged array where all elements are not of equal length." );
                 }
