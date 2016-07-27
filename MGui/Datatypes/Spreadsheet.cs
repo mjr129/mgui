@@ -956,13 +956,7 @@ namespace MGui.Datatypes
             }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-        }
-
-        public void SaveCsv( string fileName )
-        {
-            // TODO: Commit this!
-            throw new NotImplementedException("This is in a later version of the repository I've not committed. Todo: commit this!");
-        }
+        }      
     }
 
     public struct Cell
