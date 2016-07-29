@@ -55,7 +55,7 @@ namespace MGui.Helpers
                 return r;
             }
 
-            throw new InvalidOperationException("Attempt to get cached " + typeof(T).Name + " failed. The " + typeof(T).Name + " may have been deleted or renamed since it was referenced.");
+            throw new InvalidOperationException( "An attempt to retrieve an expired object was made. The object has been deleted or renamed since the reference was created. Please check the object still exists. Object type: \"" + typeof( T ).Name + "\"." );
         }
 
         public static string SafeToString<T>(this WeakReference<T> z, Converter<T, string> conversion)

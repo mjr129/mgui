@@ -602,6 +602,11 @@ namespace MGui.Helpers
             return a.ToString() + " / " + b + " (" + (((double)a / b) * 100).ToString( "F00" ) + "%)";
         }
 
+        public static string JoinAsString( this IEnumerable array, string separator = ", " )
+        {
+            return string.Join( separator, array.Cast<object>() );
+        }
+
         /// <summary>
         /// Displays a number of bytes as b, kb or Mb
         /// </summary>

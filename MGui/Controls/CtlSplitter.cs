@@ -12,10 +12,20 @@ namespace MGui.Controls
 {
     public class CtlSplitter : SplitContainer
     {
+        static Brush _fill = Brushes.LightSlateGray;
+        static Pen _outline = Pens.LightSlateGray;
+        static Pen _outline2 = Pens.LightSlateGray;
+        static Pen _dots = new Pen( Color.DarkSlateGray, 2 );
+
         public CtlSplitter()
         {                                                                   
             this.SetStyle(ControlStyles.ResizeRedraw, true);      
             SplitterWidth = 6;
+        }
+
+        static CtlSplitter()
+        {
+            _dots.DashStyle = DashStyle.Dot;
         }
 
         [EditorBrowsable(EditorBrowsableState.Never), Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -34,7 +44,7 @@ namespace MGui.Controls
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             // NA
-        }
+        }             
 
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -43,29 +53,17 @@ namespace MGui.Controls
 
             if (this.Orientation == Orientation.Horizontal)
             {
-                e.Graphics.FillRectangle(Brushes.SlateGray, s.SplitterRectangle.X, s.SplitterDistance, s.SplitterRectangle.Width, s.SplitterWidth);
-                e.Graphics.DrawLine(Pens.LightSlateGray, s.SplitterRectangle.X, s.SplitterDistance, s.SplitterRectangle.Width, s.SplitterDistance);
-                e.Graphics.DrawLine(Pens.LightSlateGray, s.SplitterRectangle.X, s.SplitterDistance + s.SplitterWidth - 1, s.SplitterRectangle.Width, s.SplitterDistance + s.SplitterWidth - 1);
-
-                using (Pen pen = new Pen(Color.Black, 2))
-                {
-                    pen.DashStyle = DashStyle.Dot;
-
-                    e.Graphics.DrawLine(pen, ((s.SplitterRectangle.Width / 2) - (gripLineWidth / 2)), s.SplitterDistance + s.SplitterWidth / 2, ((s.SplitterRectangle.Width / 2) + (gripLineWidth / 2)), s.SplitterDistance + s.SplitterWidth / 2);
-                }
+                e.Graphics.FillRectangle(_fill, s.SplitterRectangle.X, s.SplitterDistance, s.SplitterRectangle.Width, s.SplitterWidth);
+                e.Graphics.DrawLine(_outline, s.SplitterRectangle.X, s.SplitterDistance, s.SplitterRectangle.Width, s.SplitterDistance);
+                e.Graphics.DrawLine(_outline2, s.SplitterRectangle.X, s.SplitterDistance + s.SplitterWidth - 1, s.SplitterRectangle.Width, s.SplitterDistance + s.SplitterWidth - 1);
+                e.Graphics.DrawLine(_dots, ((s.SplitterRectangle.Width / 2) - (gripLineWidth / 2)), s.SplitterDistance + s.SplitterWidth / 2, ((s.SplitterRectangle.Width / 2) + (gripLineWidth / 2)), s.SplitterDistance + s.SplitterWidth / 2);
             }
             else
             {
-                e.Graphics.FillRectangle(Brushes.SlateGray, s.SplitterDistance, s.SplitterRectangle.Y, s.SplitterWidth, s.SplitterRectangle.Height);
-                e.Graphics.DrawLine(Pens.LightSlateGray, s.SplitterDistance, s.SplitterRectangle.Y, s.SplitterDistance, s.SplitterRectangle.Height);
-                e.Graphics.DrawLine(Pens.LightSlateGray, s.SplitterDistance + s.SplitterWidth - 1, s.SplitterRectangle.Y, s.SplitterDistance + s.SplitterWidth - 1, s.SplitterRectangle.Height);
-
-                using (Pen pen = new Pen(Color.Black, 2))
-                {
-                    pen.DashStyle = DashStyle.Dot;
-
-                    e.Graphics.DrawLine(pen, s.SplitterDistance + s.SplitterWidth / 2, ((s.SplitterRectangle.Height / 2) - (gripLineWidth / 2)), s.SplitterDistance + s.SplitterWidth / 2, ((s.SplitterRectangle.Height / 2) + (gripLineWidth / 2)));
-                }
+                e.Graphics.FillRectangle( _fill, s.SplitterDistance, s.SplitterRectangle.Y, s.SplitterWidth, s.SplitterRectangle.Height);
+                e.Graphics.DrawLine( _outline, s.SplitterDistance, s.SplitterRectangle.Y, s.SplitterDistance, s.SplitterRectangle.Height);
+                e.Graphics.DrawLine( _outline2, s.SplitterDistance + s.SplitterWidth - 1, s.SplitterRectangle.Y, s.SplitterDistance + s.SplitterWidth - 1, s.SplitterRectangle.Height);
+                e.Graphics.DrawLine(_dots, s.SplitterDistance + s.SplitterWidth / 2, ((s.SplitterRectangle.Height / 2) - (gripLineWidth / 2)), s.SplitterDistance + s.SplitterWidth / 2, ((s.SplitterRectangle.Height / 2) + (gripLineWidth / 2)));
             }
         }
     }
