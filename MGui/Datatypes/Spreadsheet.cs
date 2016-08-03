@@ -893,6 +893,8 @@ namespace MGui.Datatypes
 
             public TCell this[Column column] => Spreadsheet[Index, column.Index];
 
+            public TCell this[string column] => Spreadsheet[Index, Spreadsheet.FindColumn(column)];
+
             public string Name
             {
                 get
