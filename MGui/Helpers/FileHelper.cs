@@ -40,7 +40,7 @@ namespace MGui.Helpers
             }
         }
 
-        public static string Browse( IWin32Window form, string filter, string @default )
+        public static string Browse( IWin32Window form, string filter, string @default = null )
         {
             using (FileDialog ofd = new OpenFileDialog())
             {

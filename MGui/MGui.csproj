@@ -95,6 +95,7 @@
     <Compile Include="Datatypes\HashedArray.cs" />
     <Compile Include="Datatypes\IniSerialiser.cs" />
     <Compile Include="Datatypes\Map.cs" />
+    <Compile Include="Datatypes\NamedValue.cs" />
     <Compile Include="Datatypes\SettableInfo.cs" />
     <Compile Include="Datatypes\Spreadsheet.cs" />
     <Compile Include="Datatypes\ParseElementCollection.cs" />

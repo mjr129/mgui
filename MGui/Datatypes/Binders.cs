@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using MGui.Controls;
 using MGui.Datatypes;
+using MGui.Helpers;
 
 namespace MGui
 {
@@ -44,6 +45,7 @@ namespace MGui
                 Add( new BinderCtlColour() );
                 Add( new BinderTextBoxArray() );
                 Add( new BinderComboBoxBoolean() );
+                Add( new BinderComboBoxEnum() );
                 Add( new BinderConversion(this) );
             }
         }
@@ -97,7 +99,8 @@ namespace MGui
         public abstract object Get( Control control, Type dataType );
         public abstract void Set( Control control, object value, Type dataType );
         public abstract bool CanHandle( Control control, Type dataType );
-        public abstract bool CanHandle( Type dataType );
+        public abstract bool CanHandle( Type dataType );          
+        public abstract void InitialiseControl( Control control, Type dataType );
     }
 
     public class BinderConversion : Binder
@@ -172,6 +175,12 @@ namespace MGui
             return b.Binder.CreateControl( b.Binder.PreferredDataType );
         }
 
+        public override void InitialiseControl( Control control, Type dataType )
+        {
+            Tup b = CanHandle2( control, dataType );
+            b.Binder.InitialiseControl( control, dataType );
+        }
+
         public override object Get( Control control, Type dataType )
         {
             // Convert from binder's preferred type
@@ -223,14 +232,15 @@ namespace MGui
 
         public sealed override Control CreateControl( Type dataType )
         {
-            TControl control = new TControl();   
-
-            ConfigureControl( control );
-
-            return control;
+            return new TControl();   
         }
 
-        protected virtual void ConfigureControl( TControl control )
+        public override void InitialiseControl( Control control, Type dataType )
+        {
+            ConfigureControl( (TControl)control, dataType );
+        }
+
+        protected virtual void ConfigureControl( TControl control, Type dataType )
         {
             // No action
         }
@@ -299,6 +309,43 @@ namespace MGui
         }
     }
 
+    internal class BinderComboBoxEnum : Binder <ComboBox, object>
+    {                   
+        public override bool CanHandle( Type dataType )
+        {
+            return dataType.IsEnum;
+        }
+
+        protected override object GetValue( ComboBox control, Type dataType )
+        {
+            if (control.SelectedItem==null)
+            {
+                return Activator.CreateInstance( dataType );
+            }
+
+            return ((NamedValue<object>)control.SelectedItem).Value;
+        }
+
+        protected override void SetValue( ComboBox control, object value, Type dataType )
+        {
+            control.SelectedItem = value;
+        }
+
+        protected override void ConfigureControl( ComboBox control, Type dataType )
+        {
+            base.ConfigureControl( control, dataType );           
+
+            string[] names = dataType.GetEnumNames();
+            Array values = dataType.GetEnumValues();
+
+            for (int n = 0; n < names.Length; n++)
+            {
+                object value = values.GetValue( n );
+                control.Items.Add( new NamedValue<object>( names[n], ((Enum)value).ToUiString() ) );
+            }
+        }
+    }
+
     internal class BinderComboBoxBoolean : Binder<ComboBox, bool>
     {
         protected override bool GetValue( ComboBox control, Type dataType )
@@ -309,6 +356,14 @@ namespace MGui
         protected override void SetValue( ComboBox control, bool value, Type dataType )
         {
             control.SelectedIndex = value ? 1 : 0;
+        }
+
+        protected override void ConfigureControl( ComboBox control, Type dataType )
+        {
+            base.ConfigureControl( control, dataType );
+
+            control.Items.Add( "No" );
+            control.Items.Add( "Yes" );
         }
     }
 
@@ -335,6 +390,14 @@ namespace MGui
         protected override void SetValue( NumericUpDown control, IConvertible value, Type dataType )
         {
             control.Value = Convert.ToDecimal( value );
+        }
+
+        protected override void ConfigureControl( NumericUpDown control, Type dataType )
+        {   
+            base.ConfigureControl( control, dataType );
+
+            control.Minimum = decimal.MinValue; // todo: take account of specific dataType?
+            control.Maximum = decimal.MaxValue;
         }
     }
 
