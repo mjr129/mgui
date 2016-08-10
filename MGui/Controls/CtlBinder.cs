@@ -191,6 +191,7 @@ namespace MGui.Controls
                 };
 
                 Control control = binder.CreateControl( type );
+                binder.InitialiseControl( control, type );
                 control.Visible = true;
 
                 container.RowStyles.Add( new RowStyle( SizeType.AutoSize, 100.0f ) );
@@ -207,11 +208,24 @@ namespace MGui.Controls
             Bind( control, path );
         }
 
+        /// <summary>
+        /// Whether to call the binders to intiailse the controls (e.g. populate comboboxes with items)
+        /// even when the control already exists.
+        /// Use false if you have already populated the controls.
+        /// The default is false for backwards compatibility.
+        /// </summary>
+        public bool InitialiseControls { get; set; } = false;
+
         public void Bind( Control control, PropertyPath<T, object> path )
         {
             // Get property path                                       
             var propType = path.Last.PropertyType;
             var binder = this.BinderCollection.FindSuitableBinder( control, path.Last.PropertyType );
+
+            if (InitialiseControls)
+            {
+                binder.InitialiseControl( control, path.Last.PropertyType );
+            }                                       
 
             _properties.Add( control, new CtrlInfo( this, control, path, binder ) );
 
@@ -245,7 +259,7 @@ namespace MGui.Controls
             }
 
             // Create reset button
-            if (!(control is CheckBox) && GenerateRevertButtons)
+            if (!(control is CheckBox) && GenerateRevertButtons && control.Parent is TableLayoutPanel)
             {
                 Button resetButton = new Button
                 {
