@@ -309,6 +309,9 @@ namespace MGui
         }
     }
 
+    /// <summary>
+    /// ENUM in COMBO BOX
+    /// </summary>
     internal class BinderComboBoxEnum : Binder <ComboBox, object>
     {                   
         public override bool CanHandle( Type dataType )
@@ -318,7 +321,7 @@ namespace MGui
 
         protected override object GetValue( ComboBox control, Type dataType )
         {
-            if (control.SelectedItem==null)
+            if (control.SelectedItem == null)
             {
                 return Activator.CreateInstance( dataType );
             }
@@ -335,13 +338,11 @@ namespace MGui
         {
             base.ConfigureControl( control, dataType );           
 
-            string[] names = dataType.GetEnumNames();
             Array values = dataType.GetEnumValues();
 
-            for (int n = 0; n < names.Length; n++)
-            {
-                object value = values.GetValue( n );
-                control.Items.Add( new NamedValue<object>( names[n], ((Enum)value).ToUiString() ) );
+            foreach(object value in values)
+            {                                        
+                control.Items.Add( new NamedValue<object>( ((Enum)value).ToUiString(), value ) );
             }
         }
     }

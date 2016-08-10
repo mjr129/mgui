@@ -21,6 +21,11 @@ namespace MGui.Datatypes
         public SwitchException( string switchName, object switchValue )
             : base( $"The switch statement \"{switchName}\" does not have a handler for the type presented: {switchValue}. Please check the value and/or the switch." )
         {
-        }                                                            
+        }
+
+        public SwitchException( string message, string switchName, object switchValue )
+         : base( $"{message}\r\nThe switch statement \"{switchName}\" does not have a handler for the type presented: {switchValue}. Please check the value and/or the switch." )
+        {
+        }
     }
 }

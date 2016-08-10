@@ -13,6 +13,11 @@ namespace MGui.Datatypes
 
         public NamedValue( string name, T value )
         {
+            if (name == null)
+            {
+                throw new ArgumentNullException( "name" );
+            }
+
             _name = name;
             _value = value;
         }
@@ -42,19 +47,38 @@ namespace MGui.Datatypes
                 return _value == null;
             }
 
-            NamedValue<T> nv = obj as NamedValue<T>;
+            NamedValue<T> asNamedValue = obj as NamedValue<T>;
 
-            if (nv != null)
+            if (asNamedValue == null)
             {
-                if (nv.Value == null)
-                {
-                    return _value == null;
-                }
-
-                return nv.Value.Equals( _value );
+                return obj.Equals( _value );
             }
 
-            return obj.Equals( _value );
+            if (asNamedValue.Value == null)
+            {
+                return _value == null;
+            }
+
+            return asNamedValue.Value.Equals( _value );
+        }
+
+        public static NamedValue<T> AsNamedValue( T x )
+        {
+            if (x == null)
+            {
+                return new NamedValue<T>( "(null)", x );
+            }
+
+            string s = x.ToString();
+
+            if (s == null)
+            {
+                return new NamedValue<T>( "(no text)", x );
+            }
+            else
+            {
+                return new NamedValue<T>( s, x );
+            }
         }
     }
 }

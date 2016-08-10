@@ -17,7 +17,7 @@ namespace MGui.Helpers
     {
         public static void Serialise<T>( string fileName, T value )
         {
-            Serialise<T>( fileName, ESerialisationFlags.Default, value );
+            Serialise<T>( fileName, ESerialisationFlags._Default, value );
         }
 
         public static void Serialise<T>(string fileName, ESerialisationFlags format, T value )
@@ -32,7 +32,7 @@ namespace MGui.Helpers
 
         public static void Serialise<T>( Stream fs, T value )
         {
-            Serialise<T>( fs, ESerialisationFlags.Default, value );
+            Serialise<T>( fs, ESerialisationFlags._Default, value );
         }
 
         public static void Serialise<T>( Stream fs, ESerialisationFlags format, T value )
@@ -41,23 +41,23 @@ namespace MGui.Helpers
 
             switch (format & ESerialisationFlags._CompressMask)
             {
-                case ESerialisationFlags.GZip:
+                case ESerialisationFlags.GZip: 
                     fsu = new GZipStream( fs, CompressionMode.Compress );
                     break;
 
                 case ESerialisationFlags.NoCompression:
                     fsu = fs;
-                    break;
+                    break;                                                                                       
 
                 default:
-                    throw new SwitchException( format );
+                    throw new SwitchException( "format", format );
             }
 
             try
             {
                 switch (format & ESerialisationFlags._SerialiserMask)
                 {
-                    case ESerialisationFlags.Binary:
+                    case ESerialisationFlags.Binary:      
                         BinaryFormatter bf = new BinaryFormatter();
                         bf.Serialize( fsu, value );
                         break;
@@ -69,17 +69,17 @@ namespace MGui.Helpers
 
                     case ESerialisationFlags.Ini:
                         IniSerialiser.Serialise<T>( fsu, value );
-                        break;
+                        break;                                                                                         
 
                     default:
-                        throw new SwitchException( format );
+                        throw new SwitchException( "format", format );
                 }
             }
             finally
             {
                 switch (format & ESerialisationFlags._CompressMask)
-                {
-                    case ESerialisationFlags.GZip:
+                {   
+                    case ESerialisationFlags.GZip:   
                         fsu.Dispose();
                         break;
 
@@ -94,7 +94,7 @@ namespace MGui.Helpers
 
         public static T DeserialiseOrDefault<T>( string fileName )
         {
-            return DeserialiseOrDefault<T>( fileName, ESerialisationFlags.Binary, (Func<T>)null );
+            return DeserialiseOrDefault<T>( fileName, ESerialisationFlags._Default, (Func<T>)null );
         }
 
         public static T DeserialiseOrDefault<T>( string fileName, ESerialisationFlags format )
@@ -168,7 +168,7 @@ namespace MGui.Helpers
 
                 case ESerialisationFlags.NoCompression:
                     fsu = fs;
-                    break;
+                    break;                                                                                          
 
                 default:
                     throw new SwitchException( format );
@@ -187,10 +187,10 @@ namespace MGui.Helpers
                         return (T)xs.Deserialize( fsu );
 
                     case ESerialisationFlags.Ini:
-                        return IniSerialiser.Deserialise<T>( fsu );
+                        return IniSerialiser.Deserialise<T>( fsu );                                                  
 
                     default:
-                        throw new SwitchException( format );
+                        throw new SwitchException( "format", format );
                 }
             }
             finally
@@ -213,15 +213,17 @@ namespace MGui.Helpers
 
     [Flags]
     public enum ESerialisationFlags
-    {   
+    {                 
         Binary = 0,
-        GZip = 0,
-        NoCompression = 1,
-        Xml = 2,
-        Ini=4,
+        Xml = 1,
+        Ini = 2,
 
-        Default = Binary | GZip,
-        _SerialiserMask = Binary | Xml | Ini,
-        _CompressMask = GZip,
+        NoCompression = 0 << 16,
+        GZip = 1 << 16,
+
+
+        _Default = Binary | GZip,
+        _SerialiserMask = unchecked((int)0x0000FFFF),
+        _CompressMask = unchecked((int)0xFFFF0000),
     };
 }

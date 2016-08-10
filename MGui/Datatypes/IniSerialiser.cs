@@ -12,9 +12,9 @@ namespace MSerialisers
 {
     public static class IniSerialiser
     {
-        public static void Serialise<T>( Stream fileName, T data )
+        public static void Serialise<T>( Stream stream, T data )
         {
-            using (StreamWriter sw = new StreamWriter( fileName ))
+            using (StreamWriter sw = new StreamWriter( stream ))
             {                     
                 foreach (FieldInfo field in typeof( T ).GetFields())
                 {
@@ -26,21 +26,24 @@ namespace MSerialisers
             }
         }
 
-        public static T Deserialise<T>( Stream fileName )
+        public static T Deserialise<T>( Stream stream )
         {
             T r = Construct<T>();
 
-            using (StreamReader sr = new StreamReader( fileName ))
+            using (StreamReader sr = new StreamReader( stream ))
             {
-                string l = sr.ReadLine();
+                while (!sr.EndOfStream)
+                {
+                    string l = sr.ReadLine();
 
-                string[] e = l.Split( new[] { '=' }, 2 );
+                    string[] e = l.Split( new[] { '=' }, 2 );
 
-                FieldInfo field = typeof( T ).GetField( e[0] );
+                    FieldInfo field = typeof( T ).GetField( e[0] );
 
-                object x = StringToObject(e[1], field.FieldType );
+                    object x = StringToObject( e[1], field.FieldType );
 
-                field.SetValue( r, x );
+                    field.SetValue( r, x );
+                }
             }
 
             return r;
