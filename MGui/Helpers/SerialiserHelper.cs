@@ -6,7 +6,10 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml.Serialization;
 using MGui.Datatypes;
+using MSerialisers;
 
 namespace MGui.Helpers
 {
@@ -19,6 +22,8 @@ namespace MGui.Helpers
 
         public static void Serialise<T>(string fileName, ESerialisationFlags format, T value )
         {
+            fileName = GetFileName( fileName );
+
             using (FileStream fs = new FileStream( fileName, FileMode.Create ))
             {
                 Serialise<T>( fs, format, value );
@@ -55,6 +60,15 @@ namespace MGui.Helpers
                     case ESerialisationFlags.Binary:
                         BinaryFormatter bf = new BinaryFormatter();
                         bf.Serialize( fsu, value );
+                        break;
+
+                    case ESerialisationFlags.Xml:
+                        XmlSerializer xs = new XmlSerializer( typeof( T ) );
+                        xs.Serialize( fsu, value );
+                        break;
+
+                    case ESerialisationFlags.Ini:
+                        IniSerialiser.Serialise<T>( fsu, value );
                         break;
 
                     default:
@@ -119,6 +133,8 @@ namespace MGui.Helpers
 
         public static T Deserialise<T>( string fileName, ESerialisationFlags format )
         {
+            fileName = GetFileName( fileName );
+
             if (!File.Exists( fileName ))
             {
                 throw new FileNotFoundException( "Deserialise file not found.", fileName );
@@ -128,6 +144,16 @@ namespace MGui.Helpers
             {
                 return Deserialise<T>( fs, format );
             }
+        }
+
+        private static string GetFileName( string fileName )
+        {
+            if (!fileName.Contains( "\\" ))
+            {
+                return Path.Combine( Application.StartupPath, fileName );
+            }
+
+            return fileName;
         }
 
         public static T Deserialise<T>( FileStream fs, ESerialisationFlags format )
@@ -155,6 +181,13 @@ namespace MGui.Helpers
                     case ESerialisationFlags.Binary:
                         BinaryFormatter bf = new BinaryFormatter();
                         return (T)bf.Deserialize( fsu );
+
+                    case ESerialisationFlags.Xml:
+                        XmlSerializer xs = new XmlSerializer(typeof(T));
+                        return (T)xs.Deserialize( fsu );
+
+                    case ESerialisationFlags.Ini:
+                        return IniSerialiser.Deserialise<T>( fsu );
 
                     default:
                         throw new SwitchException( format );
@@ -184,9 +217,11 @@ namespace MGui.Helpers
         Binary = 0,
         GZip = 0,
         NoCompression = 1,
+        Xml = 2,
+        Ini=4,
 
         Default = Binary | GZip,
-        _SerialiserMask = Binary,
+        _SerialiserMask = Binary | Xml | Ini,
         _CompressMask = GZip,
     };
 }

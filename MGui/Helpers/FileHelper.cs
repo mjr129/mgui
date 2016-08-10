@@ -104,7 +104,7 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// Changes the extension of a filename.
+        /// Changes the extension of a fullname, including path.
         /// </summary>
         /// <param name="fileName">Original filename</param>
         /// <param name="extension">New extension, including the dot and anything new suffix to put before the dot.</param>
