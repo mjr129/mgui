@@ -66,14 +66,14 @@ namespace MGui.Datatypes
         {
             if (x == null)
             {
-                return new NamedValue<T>( "(null)", x );
+                return new NamedValue<T>( "(𝘯𝘶𝘭𝘭 𝘷𝘢𝘭𝘶𝘦)", x );
             }
 
             string s = x.ToString();
 
             if (s == null)
             {
-                return new NamedValue<T>( "(no text)", x );
+                return new NamedValue<T>( "(𝘯𝘶𝘭𝘭 𝘵𝘦𝘹𝘵)", x );
             }
             else
             {

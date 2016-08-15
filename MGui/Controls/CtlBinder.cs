@@ -67,14 +67,14 @@ namespace MGui.Controls
             public readonly Control Control;
                                   
             private object _originalValue;
-            Binder _binder;
+            private readonly Binder Binder;
 
             public CtrlInfo( CtlBinder<T> owner, Control control, PropertyPath<T, object> path, Binder binder )
             {
                 this.Owner = owner;
                 this.Control = control;
                 this.Path = path;
-                this._binder = binder;
+                this.Binder = binder;
             }
 
             public T Target
@@ -98,15 +98,23 @@ namespace MGui.Controls
                 }
             }
 
+            /// <summary>
+            /// Gets or sets the value stored in the control.
+            /// </summary>
             public object ControlValue
             {
                 get
                 {
-                    return _binder.Get( Control, Path.Last.PropertyType );
+                    return Binder.Get( Control, Path.Last.PropertyType );
                 }
                 set
                 {
-                    _binder.Set( Control, value, Path.Last.PropertyType );
+                    if (value!=null)
+                    {
+                        Debug.Assert( Path.Last.PropertyType.IsAssignableFrom( value.GetType() ), "Attempt to set a new value on a control which is not of the datatype the binder was intialised using." );
+                    }
+
+                    Binder.Set( Control, value, Path.Last.PropertyType );
                 }
             }
 
@@ -120,7 +128,34 @@ namespace MGui.Controls
                 {
                     Path.Set( Target, value );
                 }
-            }
+            }   
+        }
+
+        /// <summary>
+        /// Sets the value of a bound control.
+        /// </summary>
+        /// <remarks>
+        /// Useful for cases where the user doesn't know how the binder is managing the data.
+        /// For instance Color data is stored in the BackgroundColor of a button.
+        /// </remarks>
+        /// <param name="control">Control to set the value for</param>
+        /// <param name="value">Value to set. Must match the type of the property or field bound to this control.</param>
+        public void SetValue( Control control, object value )
+        {
+            this._properties[control].ControlValue = value;
+        }
+
+        /// <summary>
+        /// Get the value of a bound control.
+        /// </summary>
+        /// <remarks>
+        /// Useful for cases where the user doesn't know how the binder is managing the data.
+        /// For instance Color data is stored in the BackgroundColor of a button.
+        /// </remarks>
+        /// <param name="control">Control to get the value for</param>
+        public object GetValue( Control control )
+        {
+            return this._properties[control].ControlValue;
         }
 
         public CtlBinder( IContainer container )

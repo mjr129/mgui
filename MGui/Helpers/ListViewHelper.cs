@@ -38,6 +38,17 @@ namespace MGui.Helpers
             } while (en.MoveNext());  
         }
 
+        public static T GetSelectedTag<T>( this ListView self )
+            where T : class
+        {
+            return (T)GetSelectedItem( self )?.Tag;
+        }
+
+        public static ListViewItem GetSelectedItem( this ListView self )
+        {
+            return self.SelectedItems.Count != 1 ? null : self.SelectedItems[0];
+        }
+
         private static ListViewItem _CreateListViewItem( object item, SettableInfo[] sis )
         {
             if (sis.Length == 0)
