@@ -40,6 +40,16 @@ namespace MGui.Helpers
             }
         }
 
+        public static void BrowseForFolder( TextBox textBox )
+        {
+            string x = BrowseForFolder( textBox.FindForm(), textBox.Text );
+
+            if (x != null)
+            {
+                textBox.Text = x;
+            }
+        }
+
         public static string Browse( IWin32Window form, string filter, string @default = null )
         {
             using (FileDialog ofd = new OpenFileDialog())

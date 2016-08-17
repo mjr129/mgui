@@ -46,6 +46,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showMicrosoftAssembliesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exploreToassemblyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -68,12 +69,13 @@
             this.listBox1.Size = new System.Drawing.Size(586, 194);
             this.listBox1.TabIndex = 0;
             this.listBox1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listBox1_DrawItem);
+            this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Segoe UI", 27.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(40, 8);
+            this.label1.Location = new System.Drawing.Point(56, 8);
             this.label1.Margin = new System.Windows.Forms.Padding(8);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(110, 50);
@@ -175,11 +177,11 @@
             // 
             this.pictureBox1.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.pictureBox1.Image = global::MGui.Properties.Resources.Open_6529;
-            this.pictureBox1.Location = new System.Drawing.Point(16, 25);
+            this.pictureBox1.Location = new System.Drawing.Point(16, 17);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(16, 8, 0, 8);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(16, 16);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.pictureBox1.Size = new System.Drawing.Size(32, 32);
+            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 2;
             this.pictureBox1.TabStop = false;
             // 
@@ -269,9 +271,10 @@
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.showMicrosoftAssembliesToolStripMenuItem});
+            this.showMicrosoftAssembliesToolStripMenuItem,
+            this.exploreToassemblyToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(218, 26);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(221, 48);
             // 
             // showMicrosoftAssembliesToolStripMenuItem
             // 
@@ -280,6 +283,14 @@
             this.showMicrosoftAssembliesToolStripMenuItem.Size = new System.Drawing.Size(217, 22);
             this.showMicrosoftAssembliesToolStripMenuItem.Text = "&Show Microsoft assemblies";
             this.showMicrosoftAssembliesToolStripMenuItem.Click += new System.EventHandler(this.showMicrosoftAssembliesToolStripMenuItem_Click);
+            // 
+            // exploreToassemblyToolStripMenuItem
+            // 
+            this.exploreToassemblyToolStripMenuItem.Enabled = false;
+            this.exploreToassemblyToolStripMenuItem.Name = "exploreToassemblyToolStripMenuItem";
+            this.exploreToassemblyToolStripMenuItem.Size = new System.Drawing.Size(220, 22);
+            this.exploreToassemblyToolStripMenuItem.Text = "&Explore folder of (assembly)";
+            this.exploreToassemblyToolStripMenuItem.Click += new System.EventHandler(this.exploreToassemblyToolStripMenuItem_Click);
             // 
             // AboutForm
             // 
@@ -328,5 +339,6 @@
         private System.Windows.Forms.Button _btnView;
         private System.Windows.Forms.LinkLabel linkLabel1;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.ToolStripMenuItem exploreToassemblyToolStripMenuItem;
     }
 }

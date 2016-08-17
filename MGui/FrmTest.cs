@@ -25,7 +25,7 @@ namespace MGui
 
         private void button1_Click( object sender, EventArgs e )
         {
-            InputBox.Show( this, "Hello", "World", false );
+            
         }
 
         private void ctlColourEditor1_Click( object sender, EventArgs e )

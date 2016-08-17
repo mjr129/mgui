@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MGui.Datatypes;
 
 namespace MGui.Controls
 {
@@ -51,8 +52,8 @@ namespace MGui.Controls
             pictureBox1.Image = icon.ToBitmap();
         }
 
-        List<string> allMsAssemblies = new List<string>();
-        List<string> allNonMsAssemblies = new List<string>();
+        List<NamedValue<Assembly>> allMsAssemblies = new List<NamedValue<Assembly>>();
+        List<NamedValue<Assembly>> allNonMsAssemblies = new List<NamedValue<Assembly>>();
 
         private void LoadAssemblies()
         {
@@ -91,14 +92,16 @@ namespace MGui.Controls
             sb.Append( " | " + version );
             sb.Append( " | " + company );
 
+            var item = new NamedValue<Assembly>( sb.ToString(), assembly );
+
             if (company == "Microsoft Corporation")
             {
-                allMsAssemblies.Add( sb.ToString() );
+                allMsAssemblies.Add( item );
             }
             else
             {
-                allNonMsAssemblies.Add( sb.ToString() );
-            }                     
+                allNonMsAssemblies.Add( item );
+            }
         }
 
         public void Describe( Assembly assembly )
@@ -129,7 +132,7 @@ namespace MGui.Controls
 
             e.DrawBackground();
 
-            string item =(string) listBox1.Items[ e.Index ];
+            string item =listBox1.Items[ e.Index ].ToString();
             string[] elements = item.Split( '|' );
 
             int x = e.Bounds.Left;
@@ -169,14 +172,14 @@ namespace MGui.Controls
             sb.AppendLine( label4.Text );
             sb.AppendLine( label2.Text );
 
-            foreach (string asm in allNonMsAssemblies)
+            foreach (var asm in allNonMsAssemblies)
             {
-                sb.AppendLine( asm );
+                sb.AppendLine( asm.ToString() );
             }
 
-            foreach (string asm in allMsAssemblies)
+            foreach (var asm in allMsAssemblies)
             {
-                sb.AppendLine( asm );
+                sb.AppendLine( asm.ToString() );
             }
 
             Clipboard.SetText( sb.ToString() );
@@ -200,6 +203,28 @@ namespace MGui.Controls
         private void linkLabel1_LinkClicked( object sender, LinkLabelLinkClickedEventArgs e )
         {
             Process.Start( linkLabel1.Text );
+        }     
+
+        private void listBox1_SelectedIndexChanged( object sender, EventArgs e )
+        {
+            exploreToassemblyToolStripMenuItem.Enabled = listBox1.SelectedItem != null;
+
+            if (listBox1.SelectedItem != null)
+            {
+                exploreToassemblyToolStripMenuItem.Text = "&Explore folder of " + ((NamedValue<Assembly>)listBox1.SelectedItem).Value.GetName().Name;
+            }
+        }
+
+        private void exploreToassemblyToolStripMenuItem_Click( object sender, EventArgs e )
+        {
+            try
+            {
+                Process.Start( "explorer.exe", "/select,\"" + ((NamedValue<Assembly>)listBox1.SelectedItem).Value.Location + "\"" );
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show( this, ex.Message );
+            }
         }
     }
 }
