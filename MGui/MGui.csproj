@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7E682DC7-2417-4977-870E-73C9797F84D5}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MGui</RootNamespace>
     <AssemblyName>MGui</AssemblyName>
@@ -100,12 +100,6 @@
     <Compile Include="Datatypes\Spreadsheet.cs" />
     <Compile Include="Datatypes\ParseElementCollection.cs" />
     <Compile Include="Datatypes\SwitchException.cs" />
-    <Compile Include="FrmTest.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FrmTest.Designer.cs">
-      <DependentUpon>FrmTest.cs</DependentUpon>
-    </Compile>
     <Compile Include="Helpers\ArrayHelper.cs" />
     <Compile Include="Helpers\ColourHelper.cs" />
     <Compile Include="Controls\CtlBinder.cs">
@@ -150,9 +144,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\InputBox.resx">
       <DependentUpon>InputBox.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FrmTest.resx">
-      <DependentUpon>FrmTest.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
