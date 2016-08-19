@@ -114,7 +114,14 @@ namespace MGui.Controls
                         Debug.Assert( Path.Last.PropertyType.IsAssignableFrom( value.GetType() ), "Attempt to set a new value on a control which is not of the datatype the binder was intialised using." );
                     }
 
-                    Binder.Set( Control, value, Path.Last.PropertyType );
+                    try
+                    {
+                        Binder.Set( Control, value, Path.Last.PropertyType );
+                    }
+                    catch(Exception ex)
+                    {
+                        MessageBox.Show( Control.FindForm(), ex.ToString() );
+                    }
                 }
             }
 
@@ -156,6 +163,19 @@ namespace MGui.Controls
         public object GetValue( Control control )
         {
             return this._properties[control].ControlValue;
+        }
+
+        /// <summary>
+        /// Get the value of a bound control as a value of the specified type.
+        /// </summary>
+        /// <remarks>
+        /// Useful for cases where the user doesn't know how the binder is managing the data.
+        /// For instance Color data is stored in the BackgroundColor of a button.
+        /// </remarks>
+        /// <param name="control">Control to get the value for</param>
+        public TResult GetValue<TResult>( Control control )
+        {
+            return (TResult)this._properties[control].ControlValue;
         }
 
         public CtlBinder( IContainer container )
@@ -429,17 +449,56 @@ namespace MGui.Controls
         /// </summary>                                             
         public T Commit()
         {
-            foreach (var kvp in _properties)
+            bool success = TryCommit();
+
+            if (!success)
             {
-                kvp.Value.TargetValue = kvp.Value.ControlValue;
+                throw new InvalidOperationException( "Commit failed. There is at least one error." );
             }
 
-            return _target;      
+            return _target;
+        }
+
+        public bool TryCommit()
+        {
+            this._errorProvider.Clear();
+            bool success = true;
+
+            foreach (var kvp in _properties)
+            {
+                object v;
+
+                try
+                {
+                    v = kvp.Value.ControlValue;
+                    kvp.Value.TargetValue = v;
+                }
+                catch (Exception ex)
+                {
+                    _errorProvider.Set( kvp.Key, ex.Message );
+                    success = false;
+                }
+            }
+
+            return success;
         }
 
         /// <summary>
-        /// Changes the target without altering the controls.
-        /// </summary>                                    
+        /// Gets or sets the target without altering the controls.
+        /// </summary>    
+        public T Target
+        {
+            get  
+            {
+                return _target;
+            }
+            set
+            {
+                _target = value;
+            }
+        }
+
+        [Obsolete("Use Target instead.")]                                
         public void SetTarget( T newTarget )
         {
             _target = newTarget;
