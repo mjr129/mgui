@@ -418,5 +418,15 @@ namespace MGui.Controls
         {
             _target = default( T );
         }
+
+        public void SetValue( Control c, object v )
+        {
+            this._properties[c].ControlValue = v;
+        }
+
+        public object GetValue( Control c  )
+        {
+            return this._properties[c].ControlValue;
+        }
     }
 }
