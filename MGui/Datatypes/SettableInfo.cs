@@ -39,6 +39,11 @@ namespace MGui.Datatypes
 
         public abstract object GetValue( object target );
 
+        public override string ToString()
+        {
+            return Member.ToString();
+        }
+
         public static SettableInfo New( object x )
         {
             if (x is PropertyInfo)
@@ -109,7 +114,7 @@ namespace MGui.Datatypes
         public static SettableInfo[] GetSettables( this Type type )
         {
             var fields = type.GetFields().Select( z => SettableInfo.New( z ) );
-            var properties = type.GetFields().Select( z => SettableInfo.New( z ) );
+            var properties = type.GetProperties().Select( z => SettableInfo.New( z ) );
 
             return fields.Concat( properties ).ToArray();
         }

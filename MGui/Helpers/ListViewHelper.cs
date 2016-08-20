@@ -41,12 +41,12 @@ namespace MGui.Helpers
         public static T GetSelectedTag<T>( this ListView self )
             where T : class
         {
-            return GetSelectedItem( self ).Tag as T;
+            return (T)GetSelectedItem( self )?.Tag;
         }
 
         public static ListViewItem GetSelectedItem( this ListView self )
         {
-            return self.SelectedItems.Count == 1 ? self.SelectedItems[0] : null;
+            return self.SelectedItems.Count != 1 ? null : self.SelectedItems[0];
         }
 
         private static ListViewItem _CreateListViewItem( object item, SettableInfo[] sis )

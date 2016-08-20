@@ -22,17 +22,38 @@ namespace MGui.Controls
         /// <summary>
         /// Shows the <see cref="InputBox"/> using a default selection (<see cref="string.Empty"/>).
         /// </summary>           
-        public static string Show( IWin32Window owner, string message, EMode multiLine = EMode.SingleLine, IEnumerable options = null )
+        public static string Show( IWin32Window owner, string prompt, EMode mode )
         {
-            return Show( owner, null, message, null, multiLine, options );
-        }       
-  
+            return Show( owner, null, prompt, null, mode, null );
+        }
+
+        public static string Show( IWin32Window owner, string prompt )
+        {
+            return Show( owner, null, prompt, null, EMode.SingleLine, null );
+        }
+
+        public static string Show( IWin32Window owner, string prompt, EMode mode, IEnumerable options )
+        {
+            return Show( owner, null, prompt, null, mode, options );
+        }
+
+        public static string Show( IWin32Window owner, string prompt, object defaultInput )
+        {
+            return Show( owner, null, prompt, defaultInput, EMode.SingleLine, null );
+
+        }
+
+        public static string Show( IWin32Window owner, string prompt, object @default, EMode mode )
+        {
+            return Show( owner, null, prompt, @default, mode, null );
+        }
+
         /// <summary>
         /// Shows the <see cref="InputBox"/> using a default windowTitle.
         /// </summary>           
-        public static string Show( IWin32Window owner, string message, object defaultInput, EMode multiLine = EMode.SingleLine, IEnumerable options = null )
+        public static string Show( IWin32Window owner, string prompt, object @default, EMode mode, IEnumerable options )
         {
-            return Show( owner, null, message, defaultInput, multiLine, options );
+            return Show( owner, null, prompt, @default, mode, options );
         }              
 
         /// <summary>
@@ -40,13 +61,13 @@ namespace MGui.Controls
         /// </summary>
         /// <param name="owner">Owning form (or null)</param>
         /// <param name="windowTitle">Window title (null ~ owner.Text)</param>
-        /// <param name="message">Message text (null ~ "")</param>
-        /// <param name="defaultInput">Default value (null ~ "")</param>
-        /// <param name="multiLine">Multi-line edit mode</param>
+        /// <param name="prompt">Message text (null ~ "")</param>
+        /// <param name="default">Default value (null ~ "")</param>
+        /// <param name="mode">Multi-line edit mode</param>
         /// <returns>Text entered, or null if cancelled.</returns>
-        public static string Show( IWin32Window owner, string windowTitle, string message, object defaultInput, EMode multiLine = EMode.SingleLine, IEnumerable options = null )
+        public static string Show( IWin32Window owner, string windowTitle, string prompt, object @default, EMode mode, IEnumerable options)
         {
-            using (InputBox inputBox = new InputBox( owner, windowTitle, message, defaultInput, multiLine, options ))
+            using (InputBox inputBox = new InputBox( owner, windowTitle, prompt, @default, mode, options ))
             { 
                 if (inputBox.ShowDialog( owner ) == DialogResult.OK)
                 {
@@ -67,7 +88,7 @@ namespace MGui.Controls
         /// <summary>
         /// CONSTRUCTOR (Private)
         /// </summary>
-        private InputBox( IWin32Window owner, string windowTitle, string message, object @default, EMode mode, IEnumerable options )
+        private InputBox( IWin32Window owner, string windowTitle, string prompt, object @default, EMode mode, IEnumerable options )
         {
             InitializeComponent();
 
@@ -83,8 +104,8 @@ namespace MGui.Controls
                 }
             }
 
-            this.label1.Text    = message;
-            this.label1.Visible = !string.IsNullOrEmpty( message );
+            this.label1.Text    = prompt;
+            this.label1.Visible = !string.IsNullOrEmpty( prompt );
             this.Text           = windowTitle;
 
             switch (mode)
@@ -98,17 +119,21 @@ namespace MGui.Controls
                     }
 
                     _control = comboBox;
+                    _control.Dock = DockStyle.Top;
                     break;
 
                 case EMode.SingleLine:
                     TextBox slTextBox = new TextBox();
                     _control = slTextBox;
+                    _control.Dock = DockStyle.Top;
                     break;
 
                 case EMode.MultiLine:
                     TextBox mlTextBox = new TextBox();
                     _control = mlTextBox;
                     mlTextBox.Multiline = true;
+                    mlTextBox.ScrollBars = ScrollBars.Vertical;
+                    mlTextBox.Dock = DockStyle.Fill;
                     this.Height *= 2;
                     break;
             }
@@ -116,7 +141,6 @@ namespace MGui.Controls
             _control.Text    = @default != null ? @default.ToString() : null;
             _control.TabIndex = 1;
             _control.Visible = true;
-            _control.Dock = DockStyle.Top;
             _control.Margin = new Padding( 8, 8, 8, 8 );
             tableLayoutPanel1.SuspendLayout();
             tableLayoutPanel1.Controls.Add( _control, 0, 1 );

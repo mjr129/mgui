@@ -92,15 +92,74 @@ namespace MGui
         }
     }
 
+    /// <summary>
+    /// Binders handle the marshalling of data to and from a control.
+    /// Handles both existing controls as well as the capability of creating new controls.
+    /// </summary>
     public abstract class Binder
     {
+        /// <summary>
+        /// Creates and returns a control suitable for use with this binder.
+        /// </summary>
+        /// <param name="dataType">
+        /// Type of data the control is to expect
+        /// Guaranteed to have passed a CanHandle(Type) check for this dataType.
+        /// </param>
+        /// <returns>The created control</returns>
         public abstract Control CreateControl( Type dataType );
+
+        /// <summary>
+        /// Gets a datatype valid for use with this binder.
+        /// </summary>
         public abstract Type PreferredDataType { get; }
+
+        /// <summary>
+        /// Gets the value of the control
+        /// </summary>
+        /// <param name="control">The control to get the value for</param>
+        /// <param name="dataType">
+        /// The type of value expected.
+        /// Guaranteed to be the same as was called for InitialiseControl on this control.
+        /// </param>
+        /// <returns>The value</returns>
         public abstract object Get( Control control, Type dataType );
+
+        /// <summary>
+        /// Sets the value of the control
+        /// </summary>
+        /// <param name="control">The control to set the value for</param>
+        /// <param name="value">The value to set</param>
+        /// <param name="dataType">
+        /// The type of the value.
+        /// Guaranteed to be the same as was called for InitialiseControl on this control.
+        /// </param>
         public abstract void Set( Control control, object value, Type dataType );
+
+        /// <summary>
+        /// Returns if this binder can handle an existing control with data of the specified type.
+        /// </summary>
+        /// <param name="control">Existing control</param>
+        /// <param name="dataType">Datatype expected</param>
+        /// <returns>true if can handle, otherwise false</returns>
         public abstract bool CanHandle( Control control, Type dataType );
-        public abstract bool CanHandle( Type dataType );          
-        public abstract void InitialiseControl( Control control, Type dataType );
+
+        /// <summary>
+        /// Returns if this binder can handle the specified type if the binder can create its own control.
+        /// </summary>
+        /// <param name="dataType">Datatype expected</param>
+        /// <returns>true if can handle, otherwise false</returns>
+        public abstract bool CanHandle( Type dataType );
+
+        /// <summary>
+        /// Initialises the specified control (always called regardless of whether CreateControl is called)
+        /// </summary>
+        /// <param name="control">The control to initialise</param>
+        /// <param name="dataType">
+        /// The datatype to initialise for.
+        /// If a new control was created this is guaranteed to be the same type passed to CanHandle(Type) and CreateControl.
+        /// If an existing control is used this is guaranteed to be the same type passed to CanHandle(Control, Type).
+        /// </param>
+        public abstract void InitialiseControl( Control control, Type dataType );         
     }
 
     public class BinderConversion : Binder
