@@ -9,20 +9,64 @@ namespace MGui.Helpers
 {
     public static class ListBoxHelper
     {
-        public static bool RemoveSelectedItem( this ListBox listBox )
+        public static bool HasSelection( this ListBox listBox )
         {
-            if (listBox == null)
+            return listBox?.SelectedItem != null;
+        }
+
+        public static bool MoveSelectedItemDown( this ListBox listBox )
+        {
+            if (!HasSelection( listBox ))
             {
                 return false;
             }
 
-            if (listBox.SelectedItem != null)
+            int index = listBox.SelectedIndex;
+
+            if (index == listBox.Items.Count - 1)
             {
-                listBox.Items.Remove( listBox.SelectedItem );
-                return true;
+                return false;
             }
 
-            return false;
+            object item = listBox.SelectedItem;
+
+            listBox.Items.RemoveAt( index );
+            listBox.Items.Insert( index + 1, item );
+
+            return true;
+        }
+
+        public static bool MoveSelectedItemUp( this ListBox listBox )
+        {
+            if (!HasSelection( listBox ))
+            {
+                return false;
+            }
+
+            int index = listBox.SelectedIndex;
+
+            if (index == 0)
+            {
+                return false;
+            }
+
+            object item = listBox.SelectedItem;
+
+            listBox.Items.RemoveAt( index );
+            listBox.Items.Insert( index - 1, item );
+
+            return true;
+        }
+
+        public static bool RemoveSelectedItem( this ListBox listBox )
+        {
+            if (!HasSelection(listBox))
+            {
+                return false;
+            }    
+
+            listBox.Items.Remove( listBox.SelectedItem );
+            return true;
         }
     }
 }

@@ -630,7 +630,7 @@ namespace MGui.Helpers
 
             foreach (T t in array)
             {
-                if (t.Equals( item ))
+                if (object.Equals( t, item ))
                 {
                     return n;
                 }
