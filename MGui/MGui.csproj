@@ -113,6 +113,7 @@
     </Compile>
     <Compile Include="Datatypes\EErrorHandler.cs" />
     <Compile Include="Datatypes\PropertyPath.cs" />
+    <Compile Include="Helpers\DebugHelper.cs" />
     <Compile Include="Helpers\EnumHelper.cs" />
     <Compile Include="Helpers\FileHelper.cs" />
     <Compile Include="Helpers\FormHelper.cs" />
