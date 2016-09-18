@@ -83,12 +83,12 @@ namespace MGui.Helpers
 
         /// <summary>
         /// (MJR) (EXTENSION)
-        /// Like <see cref="Linq.Concat"/> but for single elements
+        /// Like <see cref="System.Linq.Enumerable.Concat{TSource}(IEnumerable{TSource}, IEnumerable{TSource})"/> but for single elements
         /// </summary>
         public static IEnumerable<T> ConcatSingle<T>( this IEnumerable<T> self, T toAdd )
         {
             return self.Concat( new T[] { toAdd } );
-        }
+        }            
 
         /// <summary>
         /// (MJR) (EXTENSION)

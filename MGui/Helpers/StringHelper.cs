@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -660,6 +662,53 @@ namespace MGui.Helpers
         public static int GetDecimalPlaces( string number )
         {
             return number.Length - number.IndexOf( '.' ) - 1;
+        }
+
+        /// <summary>
+        /// (MJR) (EXTENSION)
+        /// Gets the display name of a MemberInfo.
+        /// </summary>
+        /// <remarks>
+        /// Normally <see cref="DisplayNameAttribute"/> is used to define the names of such things,
+        /// but since <see cref="EnumHelper.ToUiString(Enum)"/> is forced to use <see cref="NameAttribute"/>
+        /// due to constraints on <see cref="DisplayNameAttribute"/> this function checks for both.
+        /// </remarks>
+        public static string ToUiString( this MemberInfo self )
+        {
+            NameAttribute attr = self.GetCustomAttribute<NameAttribute>();
+
+            if (attr != null)
+            {
+                return attr.Name;
+            }
+
+            DisplayNameAttribute dattr = self.GetCustomAttribute<DisplayNameAttribute>();
+
+            if (dattr != null)
+            {
+                return dattr.DisplayName;
+            }
+
+            return self.Name;
+        }
+
+        public static string UndoCamelCase( string name )
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (char c in name)
+            {
+                bool upper = char.IsUpper( c );
+
+                if (upper && sb.Length!=0)
+                {
+                    sb.Append( " " );
+                }
+
+                sb.Append( c );          
+            }
+
+            return sb.ToString();
         }
     }
 }
