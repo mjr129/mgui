@@ -9,10 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using MGui.Controls;
-using MGui.Datatypes;
 using MGui.Helpers;
 
-namespace MGui
+namespace MGui.Datatypes
 {
     /// <summary>
     /// Manages a list of binders.

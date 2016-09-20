@@ -100,6 +100,7 @@
     <Compile Include="Datatypes\Spreadsheet.cs" />
     <Compile Include="Datatypes\ParseElementCollection.cs" />
     <Compile Include="Datatypes\SwitchException.cs" />
+    <Compile Include="Datatypes\Union.cs" />
     <Compile Include="Helpers\ArrayHelper.cs" />
     <Compile Include="Helpers\ColourHelper.cs" />
     <Compile Include="Controls\CtlBinder.cs">
@@ -120,6 +121,7 @@
     <Compile Include="Helpers\IntHelper.cs" />
     <Compile Include="Helpers\ListBoxHelper.cs" />
     <Compile Include="Helpers\ListViewHelper.cs" />
+    <Compile Include="Helpers\ReflectionHelper.cs" />
     <Compile Include="Helpers\SerialiserHelper.cs" />
     <Compile Include="Helpers\WeakReferenceHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

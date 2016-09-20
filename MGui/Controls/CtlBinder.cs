@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using MGui.Datatypes;
 using MGui.Helpers;
+using Binder = MGui.Datatypes.Binder;
 
 namespace MGui.Controls
 {

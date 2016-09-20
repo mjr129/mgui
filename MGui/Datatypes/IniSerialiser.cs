@@ -6,9 +6,8 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-using MGui.Datatypes;
 
-namespace MSerialisers
+namespace MGui.Datatypes
 {
     public static class IniSerialiser
     {

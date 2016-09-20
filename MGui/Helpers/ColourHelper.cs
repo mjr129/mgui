@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace MGui
+namespace MGui.Helpers
 {
     public static class ColourHelper
     {

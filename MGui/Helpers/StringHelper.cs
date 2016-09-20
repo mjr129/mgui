@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using MGui.Datatypes;
 
 namespace MGui.Helpers
 {
@@ -687,6 +688,20 @@ namespace MGui.Helpers
             if (dattr != null)
             {
                 return dattr.DisplayName;
+            }
+
+            string name = self.Name;
+
+            if (self is Type && name.Contains( "`" ))
+            {
+                Type type = (Type)self;
+                StringBuilder sb = new StringBuilder();
+
+                sb.Append( name.Substring( 0, name.IndexOf( '`' ) - 1 ) );
+                sb.Append( "<" );
+                sb.Append( string.Join( ", ", type.GenericTypeArguments.Select( z => z.ToUiString() ) ) );
+                sb.Append( ">");
+                return sb.ToString();
             }
 
             return self.Name;

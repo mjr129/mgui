@@ -12,5 +12,10 @@ namespace MGui.Helpers
         {
         
         }
+
+        public static void NotifyWarning( string text )
+        {
+            
+        }
     }
 }

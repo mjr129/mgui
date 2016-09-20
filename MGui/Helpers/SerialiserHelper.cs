@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using MGui.Datatypes;
-using MSerialisers;
 
 namespace MGui.Helpers
 {
