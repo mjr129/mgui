@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,6 +20,17 @@ namespace MGui.Helpers
             {
                 return new WeakReference<T>(self);
             }
+        }
+
+        /// <summary>
+        /// Gets the target of a weak reference, where the type parameter is not known.
+        /// </summary>                                                                 
+        public static object GetUntypedTarget( object self )
+        {                            
+            MethodInfo method = self.GetType().GetMethod( nameof( WeakReference<object>.TryGetTarget ) );
+            object[] x = new object[1];  
+            method.Invoke( self, x );
+            return x[0];
         }
 
         /// <summary>
