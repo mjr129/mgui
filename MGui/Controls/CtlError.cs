@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,8 @@ namespace MGui.Controls
     /// </summary>
     public partial class CtlError : Component
     {
+        public static Icon DefaultIcon = Properties.Resources.ErrorSignifier;
+
         HashSet<Control> withErrors = new HashSet<Control>();
 
         public CtlError()
@@ -31,7 +34,7 @@ namespace MGui.Controls
 
             InitializeComponent();
 
-            errorProvider1.Icon = Properties.Resources.ErrorSignifier;
+            errorProvider1.Icon = DefaultIcon;
         }
 
         public void Check(Control control, bool condition, string text)

@@ -13,5 +13,12 @@ namespace MGui.Helpers
             Type type = baseType.MakeGenericType( parameter1 );
             return Activator.CreateInstance( type );
         }
+
+        public static bool IsOfGenericType( object result, Type type )
+        {
+            Type t = result.GetType();
+
+            return t.IsGenericType && type.IsAssignableFrom( t.GetGenericTypeDefinition() );
+        } 
     }
 }

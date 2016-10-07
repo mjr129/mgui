@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MGui.Datatypes;
 
@@ -676,35 +677,52 @@ namespace MGui.Helpers
         /// </remarks>
         public static string ToUiString( this MemberInfo self )
         {
-            NameAttribute attr = self.GetCustomAttribute<NameAttribute>();
+            Type type = self as Type;
+
+            if (type !=null && type.IsGenericType)
+            {             
+                return FormatGenericName( self, type.GetGenericArguments() );
+            }
+
+            MethodInfo method = self as MethodInfo;
+
+            if (method != null && method.IsGenericMethod)
+            {                     
+                return FormatGenericName( self, method.GetGenericArguments() );
+            }
+
+            return GetNameFromAttribute( self );
+        }
+
+        private static string FormatGenericName( MemberInfo member, Type[] arguments )
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append( GetNameFromAttribute( member ) );
+            sb.Append( "<" );
+            sb.Append( string.Join( ", ", arguments.Select( z => z.ToUiString() ) ) );
+            sb.Append( ">" );
+
+            return sb.ToString();
+        }
+
+        private static string GetNameFromAttribute( MemberInfo member )
+        {
+            NameAttribute attr = member.GetCustomAttribute<NameAttribute>();
 
             if (attr != null)
             {
                 return attr.Name;
             }
 
-            DisplayNameAttribute dattr = self.GetCustomAttribute<DisplayNameAttribute>();
+            DisplayNameAttribute dattr = member.GetCustomAttribute<DisplayNameAttribute>();
 
             if (dattr != null)
             {
                 return dattr.DisplayName;
             }
 
-            string name = self.Name;
-
-            if (self is Type && name.Contains( "`" ))
-            {
-                Type type = (Type)self;
-                StringBuilder sb = new StringBuilder();
-
-                sb.Append( name.Substring( 0, name.IndexOf( '`' ) - 1 ) );
-                sb.Append( "<" );
-                sb.Append( string.Join( ", ", type.GenericTypeArguments.Select( z => z.ToUiString() ) ) );
-                sb.Append( ">");
-                return sb.ToString();
-            }
-
-            return self.Name;
+            return member.Name;
         }
 
         public static string UndoCamelCase( string name )
@@ -724,6 +742,80 @@ namespace MGui.Helpers
             }
 
             return sb.ToString();
+        }
+
+        private static Comparer _comparer = Comparer.Default;
+
+        /// <summary>
+        /// Implements the Windows API function "StrCmpLogicalW" in MSIL.
+        /// </summary>         
+        public static int StrCmpLogicalW( string x, string y )
+        {
+            if (x == null)
+            {
+
+            }
+
+            string[] xElements = Regex.Split( x, "([0-9]+)" );
+            string[] yElements = Regex.Split( y, "([0-9]+)" );
+            IEnumerable<object> xObjects = xElements.Select( ToIntIfPossible );
+            IEnumerable<object> yObjects = yElements.Select( ToIntIfPossible );
+
+            return CompareEnumerables( xObjects, yObjects );
+        }
+
+        /// <summary>
+        /// Compares two enumerables.
+        /// Used by <see cref="StrCmpLogicalW"/>.
+        /// </summary>                           
+        private static int CompareEnumerables( IEnumerable<object> x, IEnumerable<object> y )
+        {
+            IEnumerator xi = x.GetEnumerator();
+            IEnumerator yi = y.GetEnumerator();
+
+            while (true)
+            {
+                bool xm = xi.MoveNext();
+                bool rm = yi.MoveNext();
+
+                if (!(xm || rm))
+                {
+                    return 0;
+                }
+
+                if (!xm)
+                {
+                    return -1;
+                }
+
+                if (!rm)
+                {
+                    return 1;
+                }
+
+                int compared = _comparer.Compare( xi.Current, yi.Current );
+
+                if (compared != 0)
+                {
+                    return compared;
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// Returns the argument as an integer, or itself if that is not possible.
+        /// </summary> 
+        private static object ToIntIfPossible( string arg )
+        {
+            int v;
+
+            if (int.TryParse( arg, out v ))
+            {
+                return v;
+            }
+
+            return arg;
         }
     }
 }

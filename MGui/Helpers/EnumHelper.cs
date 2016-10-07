@@ -12,12 +12,14 @@ namespace MGui.Helpers
     {
         /// <summary>
         /// (MJR) (EXTENSION)
-        /// Returns if the enum contains the specified flag.
+        /// Returns if the enum contains all of the specified flags.
         /// </summary>         
         public static bool Has<T>( this T self, T flag )
             where T : struct, IComparable, IFormattable, IConvertible // aka. Enum
         {
-            return (Convert.ToInt32( self ) & Convert.ToUInt32( flag )) != 0;
+            uint selfI = Convert.ToUInt32( self );
+            uint flagI = Convert.ToUInt32( flag );
+            return (selfI & flagI) == flagI;
         }
 
         /// <summary>

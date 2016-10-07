@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 namespace MGui.Helpers
 {
     public static class WeakReferenceHelper
-    {
-        public static WeakReference<T> ToWeakReference<T>(T self)
+    {                                                   
+        public static WeakReference<T> ToWeakReference<T>(this T self)
           where T : class
         {
             if (self == null)
@@ -18,6 +18,18 @@ namespace MGui.Helpers
             else
             {
                 return new WeakReference<T>(self);
+            }
+        }
+
+        public static WeakReference ToWeakReferenceO( this object self )
+        {
+            if (self == null)
+            {
+                return null;
+            }
+            else
+            {
+                return new WeakReference( self );
             }
         }
 
@@ -72,5 +84,9 @@ namespace MGui.Helpers
             return (a == null) ? "〿" : a.ToString();
         }
 
+        public static object GetUntypedTarget( object result )
+        {
+            throw new InvalidOperationException( "PLACEHOLDER METHOD UNTIL COMMIT." );
+        }
     }
 }

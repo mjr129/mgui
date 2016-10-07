@@ -43,14 +43,28 @@ namespace MGui.Datatypes
             }
         }
 
+        public int Count => _counts.Count;
+
         public void Clear()
         {
             _counts.Clear();
         }
 
-        public int FindMax()
+        public KeyValuePair<T, int> FindMax()
         {
-            return _counts.Values.Max();
+            T result = default( T );
+            int resultCount = int.MinValue;
+
+            foreach (var kvp in _counts)
+            {
+                if (kvp.Value > resultCount)
+                {
+                    result = kvp.Key;
+                    resultCount = kvp.Value;
+                }
+            }
+
+            return new KeyValuePair<T, int>( result, resultCount );
         }
 
         public int FindMinNonZero()

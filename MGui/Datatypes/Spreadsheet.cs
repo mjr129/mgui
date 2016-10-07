@@ -24,7 +24,7 @@ namespace MGui.Datatypes
         public bool HasColNames = true;
         public bool TolerantConversion = false;
         public ProgressDelegate Progress = null;
-        //public Converter<string, T> Converter = null; 
+        public int WriteSpaces = 0;
 
         public static readonly SpreadsheetReader Default = new SpreadsheetReader();
 
@@ -95,6 +95,25 @@ namespace MGui.Datatypes
             }
         }
 
+        /// <summary>
+        /// Delimiter (for writing only)
+        /// Includes any prefixed spaces if necessary
+        /// </summary>
+        private string FullDelimiter
+        {
+            get
+            {
+                if (WriteSpaces != 0)
+                {
+                    return Delimiter + new string( ' ', WriteSpaces );
+                }
+                else
+                {
+                    return Delimiter.ToString();
+                }
+            }
+        }
+
         public void Write<T>( Spreadsheet<T> ss, string fileName, Func<T, string> converter = null )
         {       
             using (StreamWriter sw = new StreamWriter( fileName ))
@@ -103,7 +122,7 @@ namespace MGui.Datatypes
                 {
                     if (this.HasRowNames)
                     {
-                        sw.Write( "," );
+                        sw.Write( FullDelimiter );
                     }
 
                     sw.WriteLine( WriteFields( ss.ColNames ) );
@@ -114,7 +133,7 @@ namespace MGui.Datatypes
                     if (this.HasRowNames)
                     {
                         sw.Write( WriteField( row.Name ));
-                        sw.Write( "," );
+                        sw.Write( FullDelimiter );
                     }
 
                     if (converter == null)
@@ -203,7 +222,7 @@ namespace MGui.Datatypes
 
                 if (result.Length != 0)
                 {
-                    result.Append( this.Delimiter );
+                    result.Append( FullDelimiter );
                 }
 
                 result.Append( WriteField(s) );
