@@ -16,6 +16,11 @@ namespace MGui.Helpers
 
         public static bool IsOfGenericType( object result, Type type )
         {
+			if (result == null)
+            {
+                return false;
+            }
+
             Type t = result.GetType();
 
             return t.IsGenericType && type.IsAssignableFrom( t.GetGenericTypeDefinition() );
