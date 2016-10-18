@@ -61,6 +61,11 @@ namespace MGui.Controls
             // NA
         }
 
+        public override string ToString()
+        {
+            return $"{typeof( CtlBinder<T> ).ToUiString()}: {_properties.Count} bindings";
+        }
+
         public class CtrlInfo
         {
             public CtlBinder<T> Owner;
@@ -76,6 +81,11 @@ namespace MGui.Controls
                 this.Control = control;
                 this.Path = path;
                 this.Binder = binder;
+            }
+
+            public override string ToString()
+            {
+                return $"Binds {{{Control.Name}}} to {{{Path}}}.";
             }
 
             public T Target
@@ -291,28 +301,25 @@ namespace MGui.Controls
                 TrackChanges( control );
             }
 
-            // Create tooltops
-            foreach (CtrlInfo ctrlInfo in _properties.Values)
+            // Create tooltops          
+            StringBuilder toolTipText = new StringBuilder();
+            CategoryAttribute category = path.Last.GetCustomAttribute<CategoryAttribute>();
+            DescriptionAttribute description = path.Last.GetCustomAttribute<DescriptionAttribute>();
+
+            if (category != null)
             {
-                StringBuilder sb = new StringBuilder();
-                CategoryAttribute cat = ctrlInfo.Path.Last.GetCustomAttribute<CategoryAttribute>();
-                DescriptionAttribute desc = ctrlInfo.Path.Last.GetCustomAttribute<DescriptionAttribute>();
-
-                if (cat != null)
-                {
-                    sb.Append( cat.Category.ToBold() + ": " );
-                }
-
-                sb.Append( GetPropertyName( path ).ToBold() );
-
-                if (desc != null)
-                {
-                    sb.AppendLine();
-                    sb.Append( desc.Description );
-                }
-
-                toolTip1.SetToolTip( ctrlInfo.Control, sb.ToString() );
+                toolTipText.Append( category.Category.ToBold() + ": " );
             }
+
+            toolTipText.Append( path.ToUiString().ToBold() );
+
+            if (description != null)
+            {
+                toolTipText.AppendLine();
+                toolTipText.Append( description.Description );
+            }
+
+            toolTip1.SetToolTip( control, toolTipText.ToString() );
 
             // Create reset button
             if (!(control is CheckBox) && GenerateRevertButtons && control.Parent is TableLayoutPanel)

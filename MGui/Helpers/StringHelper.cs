@@ -38,7 +38,7 @@ namespace MGui.Helpers
         /// <summary>
         /// (EXTENSION) (MJR) UTF text conversion
         /// </summary>
-        private static string ToUtf( this string x, string style )
+        private static string ChangeAlphabet( this string x, string style )
         {
             if (x == null)
             {
@@ -52,17 +52,17 @@ namespace MGui.Helpers
             {
                 char c = x[n];
 
-                if (c >= '0' && c < '9')
+                if (c >= '0' && c <= '9')
                 {
                     string nc = si.SubstringByTextElements( c - '0', 1 );
                     sb.Append( nc );
                 }
-                else if (c >= 'A' && c < 'Z')
+                else if (c >= 'A' && c <= 'Z')
                 {
                     string nc = si.SubstringByTextElements( c - 'A' + 11, 1 );
                     sb.Append( nc );
                 }
-                else if (c >= 'a' && c < 'z')
+                else if (c >= 'a' && c <= 'z')
                 {
                     string nc = si.SubstringByTextElements( c - 'a' + 38, 1 );
                     sb.Append( nc );
@@ -77,59 +77,59 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// (EXTENSION) (MJR) UTF text conversion
+        /// (EXTENSION) (MJR) UTF text conversion - Bold alphabet
         /// </summary>
         public static string ToBold( this string x )
         {
-            return ToUtf( x, UtBold );
+            return ChangeAlphabet( x, UtBold );
         }
 
         /// <summary>
-        /// (EXTENSION) (MJR) UTF text conversion
+        /// (EXTENSION) (MJR) UTF text conversion - Sans alphabet
         /// </summary>
         public static string ToSans( this string x )
         {
-            return ToUtf( x, UtSans );
+            return ChangeAlphabet( x, UtSans );
         }
 
         /// <summary>
-        /// (EXTENSION) (MJR) UTF text conversion
+        /// (EXTENSION) (MJR) UTF text conversion - Sans bold alphabet
         /// </summary>
         public static string ToSansBold( this string x )
         {
-            return ToUtf( x, UtSansBold );
+            return ChangeAlphabet( x, UtSansBold );
         }
 
         /// <summary>
-        /// (EXTENSION) (MJR) UTF text conversion
+        /// (EXTENSION) (MJR) UTF text conversion - Sans bold italic alphabet
         /// </summary>
         public static string ToSansBoldItalic( this string x )
         {
-            return ToUtf( x, UtSansBoldItalic );
+            return ChangeAlphabet( x, UtSansBoldItalic );
         }
 
         /// <summary>
-        /// (EXTENSION) (MJR) UTF text conversion
+        /// (EXTENSION) (MJR) UTF text conversion - Small caps alphabet
         /// </summary>
         public static string ToSmallCaps( this string x )
         {
-            return ToUtf( x, UtSmallCaps );
+            return ChangeAlphabet( x, UtSmallCaps );
         }
 
         /// <summary>
-        /// (EXTENSION) (MJR) UTF text conversion
+        /// (EXTENSION) (MJR) UTF text conversion - Subscript numerics
         /// </summary>
         public static string ToSubScript( int value )
         {
-            return value.ToString().ToUtf( UtSubscript );
+            return value.ToString().ChangeAlphabet( UtSubscript );
         }
 
         /// <summary>
-        /// (EXTENSION) (MJR) UTF text conversion
+        /// (EXTENSION) (MJR) UTF text conversion - Circled numerics
         /// </summary>
         public static string Circle( int value )
         {
-            return value.ToString().ToUtf( UtCircled );
+            return value.ToString().ChangeAlphabet( UtCircled );
         }
 
         /// <summary>
@@ -169,7 +169,7 @@ namespace MGui.Helpers
         /// (MJR) Capitalises the first letter of the string.
         /// Other characters remain unchanged.
         /// </summary>
-        public static string ToSentence( this string self )
+        public static string ToSentenceCase( this string self )
         {
             if (self == null)
             {
@@ -187,7 +187,7 @@ namespace MGui.Helpers
         /// <summary>
         /// (MJR) Capitalises the first letter of the string and characters after a space or punctuation.
         /// </summary>
-        public static string ToTitle( this string self )
+        public static string ToTitleCase( this string self )
         {
             char[] r = new char[self.Length];
             bool u = true;
@@ -217,54 +217,23 @@ namespace MGui.Helpers
         /// <summary>
         /// (MJR) Splits a string about "," accounting for nested sequences using "{" and "}".
         /// </summary>
+        [Obsolete( "Use the " + nameof( SpreadsheetReader ) + " class instead." )]
         public static List<string> SplitGroups( this string text )
         {
-            bool isInBrackets = false;
-            StringBuilder current = new StringBuilder();
-            char[] delimiters = { ',' };
-            char[] startBracket = { '{' };
-            char[] endBracket = { '}' };
-            char[] ignorable = { ' ' };
-
-            bool isNewElement = true;
-
-            List<string> result = new List<string>();
-
-            foreach (char c in text)
+            SpreadsheetReader sr = new SpreadsheetReader()
             {
-                if (isInBrackets && endBracket.Contains( c ))
-                {
-                    isInBrackets = false;
-                }
-                else if (!isInBrackets && delimiters.Contains( c ))
-                {
-                    result.Add( current.ToString() );
-                    current.Clear();
-                }
-                else if (!isInBrackets && isNewElement && startBracket.Contains( c ))
-                {
-                    isInBrackets = true;
-                }
-                else
-                {
-                    if (isNewElement && !ignorable.Contains( c ))
-                    {
-                        isNewElement = false;
-                    }
+                CloseQuote='}',
+                OpenQuote='{',
+                Delimiter=',',
+            };
 
-                    current.Append( c );
-                }
-            }
-
-            result.Add( current.ToString() );
-            current.Clear();
-
-            return result;
+            return sr.ReadFields( text ).ToList();
         }
 
         /// <summary>
         /// Converts a string to an array of [T], using a specified [conversion] and splitting about [sep]
         /// </summary>           
+        [Obsolete( "Superceded by LINQ, use " + nameof( Enumerable ) + "." + nameof( Enumerable.Select ) )]
         public static T[] StringToArray<T>( string str, Converter<string, T> conversion, string sep = "," )
         {
             string[] elements = str.Split( new[] { sep }, StringSplitOptions.RemoveEmptyEntries );
@@ -300,31 +269,16 @@ namespace MGui.Helpers
         }
 
         /// <summary>
-        /// Like string::join this converts an array to a string, but doesn't consider the type.
-        /// </summary>                                           
-        public static string ArrayToString( IEnumerable array, string delimiter = ", " )
+        /// Like string::join this converts an array to a string, but gives a default parameter.
+        /// </summary>                                                                          
+        public static string ArrayToString( IEnumerable self, string delimiter = ", " )
         {
-            if (array == null)
+            if (self == null)
             {
                 return null;
             }
-
-            StringBuilder sb = new StringBuilder();
-
-            foreach (object t in array)
-            {
-                if (sb.Length != 0)
-                {
-                    sb.Append( delimiter );
-                }
-
-                if (t != null)
-                {
-                    sb.Append( t.ToString() );
-                }
-            }
-
-            return sb.ToString();
+            
+            return string.Join( delimiter, self.Cast<object>() );   
         }
 
         /// <summary>

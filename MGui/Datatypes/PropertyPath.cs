@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using MGui.Helpers;
 
 namespace MGui.Datatypes
 {
@@ -131,6 +132,22 @@ namespace MGui.Datatypes
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Property path as a string.
+        /// </summary>             
+        public override string ToString()
+        {
+            return string.Join( ".", this._properties.Select( z => z.Name ) );
+        }
+
+        /// <summary>
+        /// Same as <see cref="ToString"/> but uses <see cref="StringHelper.ToUiString"/>.
+        /// </summary>                                                         
+        public string ToUiString()
+        {
+            return string.Join( " → ", this._properties.Select( z => z.ToUiString() ) );
         }
 
         internal static PropertyPath<TSource,TDestination>[] ReflectAll( Type type )

@@ -75,7 +75,7 @@ namespace MGui.Controls
         {
             errorProvider1.SetIconAlignment(control, ErrorIconAlignment.MiddleLeft);
             errorProvider1.SetIconPadding(control, 0);
-            errorProvider1.SetError(control, text);
+            errorProvider1.SetError(control, text ?? "Error");
             withErrors.Add(control);
         }
 

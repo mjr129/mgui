@@ -102,6 +102,7 @@
     <Compile Include="Datatypes\SwitchException.cs" />
     <Compile Include="Datatypes\Union.cs" />
     <Compile Include="Helpers\ArrayHelper.cs" />
+    <Compile Include="Helpers\BitmapDataHelper%28TEMPORARY%29.cs" />
     <Compile Include="Helpers\ColourHelper.cs" />
     <Compile Include="Controls\CtlBinder.cs">
       <SubType>Component</SubType>
@@ -119,6 +120,7 @@
     <Compile Include="Helpers\FileHelper.cs" />
     <Compile Include="Helpers\FormHelper.cs" />
     <Compile Include="Helpers\ImageHelper.cs" />
+    <Compile Include="Helpers\ImageListHelper%28TEMPORARY%29.cs" />
     <Compile Include="Helpers\IntHelper.cs" />
     <Compile Include="Helpers\ListBoxHelper.cs" />
     <Compile Include="Helpers\ListViewHelper.cs" />
