@@ -130,5 +130,10 @@ namespace MGui.Helpers
 
             return false;
         }
+
+        public static uint ToArgbU( this Color self )
+        {
+            return unchecked((uint) self.ToArgb() );
+        }
     }
 }

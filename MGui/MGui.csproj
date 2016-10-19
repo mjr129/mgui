@@ -103,6 +103,7 @@
     <Compile Include="Datatypes\SwitchException.cs" />
     <Compile Include="Datatypes\Union.cs" />
     <Compile Include="Helpers\ArrayHelper.cs" />
+    <Compile Include="Helpers\BitmapDataHelper%28TEMPORARY%29.cs" />
     <Compile Include="Helpers\ColourHelper.cs" />
     <Compile Include="Controls\CtlBinder.cs">
       <SubType>Component</SubType>
@@ -121,6 +122,7 @@
     <Compile Include="Helpers\FormHelper.cs" />
     <Compile Include="Helpers\ImageHelper.cs" />
     <Compile Include="Helpers\ImageListHelper.cs" />
+    <Compile Include="Helpers\ImageListHelper%28TEMPORARY%29.cs" />
     <Compile Include="Helpers\IntHelper.cs" />
     <Compile Include="Helpers\ListBoxHelper.cs" />
     <Compile Include="Helpers\ListViewHelper.cs" />
@@ -166,6 +168,10 @@
     <None Include="Resources\Open_6529.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>UpdateVersionNumber.exe "$(ProjectDir)Properties\AssemblyInfo.cs"
+EXIT 0</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

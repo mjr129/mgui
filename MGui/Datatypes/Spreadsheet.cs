@@ -600,8 +600,16 @@ namespace MGui.Datatypes
                 if (Data != null)
                 {
                     for (int c = dataCol; c < lineData.Length; c++)
-                    {      
-                        Data[rowIndex, colIndex] = converter( lineData[c] );
+                    {
+                        try
+                        {
+                            Data[rowIndex, colIndex] = converter( lineData[c] );
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new FormatException( $"Cannot parse the cell in row {{{rowIndex}}}, column {{{colIndex}}}, file {{{title}}}. " + ex.Message, ex );
+
+                        }
                         colIndex++;
                     }
                 }
@@ -611,7 +619,15 @@ namespace MGui.Datatypes
 
                     for (int c = dataCol; c < lineData.Length; c++)
                     {
-                        temp[colIndex] = converter( lineData[c] );
+                        try
+                        {
+                            temp[colIndex] = converter( lineData[c] );
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new FormatException( $"Cannot parse the cell in row {{{rowIndex}}}, column {{{colIndex}}}, file {{{title}}}. " + ex.Message, ex );
+                        }
+
                         colIndex++;
                     }
 
