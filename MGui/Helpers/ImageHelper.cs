@@ -24,5 +24,10 @@ namespace MGui.Helpers
 
             return result;
         }
+
+        public static uint ToArgbU( this Color color )
+        {
+            return unchecked((uint)color.ToArgb());
+        }
     }
 }

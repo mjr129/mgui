@@ -45,7 +45,7 @@ namespace MGui.Controls
             }
             else
             {
-                Set(control, text);
+                Set(control, text ?? "Error");
             }
         } 
 

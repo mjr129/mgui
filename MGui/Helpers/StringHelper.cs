@@ -722,6 +722,13 @@ namespace MGui.Helpers
                 return dattr.DisplayName;
             }
 
+            int x = member.Name.IndexOf( "`" );
+
+            if (x != -1)
+            {
+                return member.Name.Substring( 0, x );
+            }
+
             return member.Name;
         }
 

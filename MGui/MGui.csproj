@@ -90,6 +90,7 @@
     <Compile Include="Controls\InputBox.Designer.cs">
       <DependentUpon>InputBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\BitmapDataHelper.cs" />
     <Compile Include="Datatypes\Counter.cs" />
     <Compile Include="Datatypes\EquivalencePool.cs" />
     <Compile Include="Datatypes\HashedArray.cs" />
@@ -119,6 +120,7 @@
     <Compile Include="Helpers\FileHelper.cs" />
     <Compile Include="Helpers\FormHelper.cs" />
     <Compile Include="Helpers\ImageHelper.cs" />
+    <Compile Include="Helpers\ImageListHelper.cs" />
     <Compile Include="Helpers\IntHelper.cs" />
     <Compile Include="Helpers\ListBoxHelper.cs" />
     <Compile Include="Helpers\ListViewHelper.cs" />
