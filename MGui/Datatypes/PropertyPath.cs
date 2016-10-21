@@ -10,16 +10,32 @@ using MGui.Helpers;
 
 namespace MGui.Datatypes
 {
-    public class PropertyPath<TSource, TDestination>
-    {
-        public delegate TDestination Property( TSource target );
-        private readonly SettableInfo[] _properties;
+    public class PropertyPath
+    {                                                     
+        protected readonly SettableInfo[] _properties;
 
-        public PropertyPath( Expression<Property> property )
+        public PropertyPath( IEnumerable<SettableInfo> properties )
+        {
+            _properties = properties.ToArray();
+        }
+
+        public PropertyPath( Expression<PropertyPath<object, object>.Property> property )
+            : this( Decompose( property ) )
+        {
+            // NFA
+        }
+
+        public PropertyPath( params SettableInfo[] properties )
+            : this( (IEnumerable<SettableInfo>)properties )
+        {
+            // NFA
+        }
+
+        public static IEnumerable<SettableInfo> Decompose<T, U>( Expression<PropertyPath<T, U>.Property> property )
         {
             List<SettableInfo> properties = new List<SettableInfo>();
 
-            var body = property.Body;
+            Expression body = property.Body;
 
             while (!(body is ParameterExpression))
             {
@@ -28,7 +44,7 @@ namespace MGui.Datatypes
                 if (bodyUe != null)
                 {
                     MemberExpression memEx = bodyUe.Operand as MemberExpression;
-                    properties.Add( SettableInfo.New(memEx.Member) );
+                    properties.Add( SettableInfo.New( memEx.Member ) );
 
                     body = memEx.Expression;
                     continue;
@@ -38,19 +54,14 @@ namespace MGui.Datatypes
 
                 if (bodyMe != null)
                 {
-                    properties.Add( SettableInfo.New( bodyMe.Member) );
+                    properties.Add( SettableInfo.New( bodyMe.Member ) );
 
                     body = bodyMe.Expression;
                     continue;
                 }
             }
 
-            _properties = properties.Reverse<SettableInfo>().ToArray();
-        }
-
-        public PropertyPath( params SettableInfo[] pathInSequence )
-        {
-            _properties = pathInSequence;
+            return properties.Reverse<SettableInfo>();
         }
 
         public bool HasDefaultValue
@@ -76,6 +87,18 @@ namespace MGui.Datatypes
             }
         }
 
+        public Type PropertyType => Last.PropertyType;
+
+        public Type DeclaringType => First.DeclaringType;
+
+        public SettableInfo First
+        {
+            get
+            {
+                return _properties[0];
+            }
+        }
+
         public SettableInfo Last
         {
             get
@@ -84,7 +107,7 @@ namespace MGui.Datatypes
             }
         }
 
-        public TDestination Get( TSource source )
+        public object Get( object source )
         {
             object target = source;
 
@@ -97,10 +120,10 @@ namespace MGui.Datatypes
                 if ((n != _properties.Length - 1) && target == null)
                 {
                     target = TryToCreateTarget( property.PropertyType );
-                }                     
+                }
             }
 
-            return (TDestination)target;
+            return target;
         }
 
         private object TryToCreateTarget( Type t )
@@ -108,10 +131,8 @@ namespace MGui.Datatypes
             return Activator.CreateInstance( t );
         }
 
-        public void Set( TSource source, TDestination value )
-        {
-            object target = source;
-
+        public void Set( object target, object value )
+        {                             
             for (int n = 0; n < _properties.Length; n++)
             {
                 SettableInfo property = _properties[n];
@@ -150,16 +171,83 @@ namespace MGui.Datatypes
             return string.Join( " → ", this._properties.Select( z => z.ToUiString() ) );
         }
 
-        internal static PropertyPath<TSource,TDestination>[] ReflectAll( Type type )
+        internal static PropertyPath[] ReflectAll(Type type)
         {
-            List<PropertyPath<TSource, TDestination>> result = new List<PropertyPath<TSource, TDestination>>();
+            List<PropertyPath> result = new List<PropertyPath>();
 
             foreach (SettableInfo settable in type.GetSettables())
             {
-                result.Add( new PropertyPath<TSource, TDestination>( settable ) );
+                result.Add( new PropertyPath( settable ) );
             }
 
             return result.ToArray();
+        }
+
+        internal static PropertyPath<T, object>[] ReflectAll<T>()
+        {
+            List<PropertyPath<T, object>> result = new List<PropertyPath<T, object>>();
+
+            foreach (SettableInfo settable in typeof( T ).GetSettables())
+            {
+                result.Add( new PropertyPath<T, object>( settable ) );
+            }
+
+            return result.ToArray();
+        }
+
+        public PropertyPath Append( PropertyPath x )
+        {
+            return new PropertyPath( AppendInternal( x ) );
+        }
+
+        protected IEnumerable<SettableInfo> AppendInternal( PropertyPath x )
+        {
+            if (x.DeclaringType != this.PropertyType)
+            {
+                throw new InvalidOperationException( $"Cannot join a property path returning {{{this.PropertyType.Name}}} to one accepting {{{x.DeclaringType}}}." );
+            }
+
+            return this._properties.Concat( x._properties );
+        }
+    }
+
+    public class PropertyPath<TSource, TDestination>     : PropertyPath
+    {
+        public delegate TDestination Property( TSource target );
+
+        public PropertyPath<TSource, T> Append<T>( PropertyPath<TDestination, T> x )
+        {                                                          
+            return new PropertyPath<TSource, T>( AppendInternal( x ) );
+        }
+
+        public PropertyPath<TSource, T> Append<T>( Expression< PropertyPath<TDestination, T>.Property> x )
+        {
+            return new PropertyPath<TSource, T>( AppendInternal( new PropertyPath<TDestination, T>( x ) ) );
+        }
+
+        public PropertyPath( IEnumerable<SettableInfo> properties ) : base( properties )
+        {
+          // NFA
+        }
+
+        public PropertyPath( Expression<Property> property ) : base( PropertyPath.Decompose<TSource, TDestination>( property) )
+        {
+           // NFA
+        }
+
+        public PropertyPath( params SettableInfo[] properties ) : base( properties )
+        {
+            // NFA
+        }                      
+
+        public new TDestination Get( TSource target )
+        {
+            return (TDestination) base.Get( target );
+        }
+
+        public new void Set( TSource target, TDestination value )
+        {
+            base.Set( target, value );
         }
     }
 }

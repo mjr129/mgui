@@ -25,17 +25,14 @@ namespace MGui.Controls
         readonly Dictionary<Control, CtrlInfo> _properties = new Dictionary<Control, CtrlInfo>();
         private Control _revertButtonSelection;
         private T _target;
-        private BinderCollection _binderCollection;
-
-        [DefaultValue( true )]
-        public bool GenerateRevertButtons { get; set; } = true;
+        private BinderCollection _binderCollection;                  
 
         [DefaultValue( true )]
         public bool TestOnEdit { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the BinderCollection.
-        /// The default is <see cref="BinderCollection.Default"/>.
+        /// The default is a copy of <see cref="BinderCollection.Default"/>.
         /// </summary>
         [Browsable( false ), DesignerSerializationVisibility( DesignerSerializationVisibility.Hidden )]
         public BinderCollection BinderCollection
@@ -44,7 +41,7 @@ namespace MGui.Controls
             {
                 if (_binderCollection == null)
                 {
-                    _binderCollection = BinderCollection.Default;
+                    _binderCollection = new BinderCollection( true );
                 }
 
                 return _binderCollection;
@@ -220,9 +217,9 @@ namespace MGui.Controls
             ctrlInfo.ControlValue = ctrlInfo.Path.DefaultValue;
         }
 
-        public TableLayoutPanel AutoBind( Type type )
+        public TableLayoutPanel AutoBind( )
         {
-            return AutoBind( PropertyPath<T, object>.ReflectAll( type ) );
+            return AutoBind( PropertyPath.ReflectAll<T>() );
         }
 
         public TableLayoutPanel AutoBind( params Expression<PropertyPath<T, object>.Property>[] properties )
@@ -278,9 +275,8 @@ namespace MGui.Controls
         /// Whether to call the binders to intiailse the controls (e.g. populate comboboxes with items)
         /// even when the control already exists.
         /// Use false if you have already populated the controls.
-        /// The default is false for backwards compatibility.
         /// </summary>
-        public bool InitialiseControls { get; set; } = false;
+        public bool InitialiseControls { get; set; } = true;
 
         public void Bind( Control control, PropertyPath<T, object> path )
         {
@@ -319,26 +315,7 @@ namespace MGui.Controls
                 toolTipText.Append( description.Description );
             }
 
-            toolTip1.SetToolTip( control, toolTipText.ToString() );
-
-            // Create reset button
-            if (!(control is CheckBox) && GenerateRevertButtons && control.Parent is TableLayoutPanel)
-            {
-                Button resetButton = new Button
-                {
-                    Text = string.Empty,
-                    Image = Properties.Resources.MnuUndo,
-                    Size = new Size(control.Height, control.Height ),
-                    Visible = true,
-                    Tag = control,
-                    Margin = control.Margin
-                };
-
-                TableLayoutPanel tlp = (TableLayoutPanel)control.Parent;
-                tlp.Controls.Add( resetButton, tlp.ColumnCount - 1, tlp.GetRow( control ) );
-
-                resetButton.Click += resetButton_Click;
-            }
+            toolTip1.SetToolTip( control, toolTipText.ToString() );        
 
             control.MouseUp += Control_MouseUp;
         }

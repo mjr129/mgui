@@ -143,7 +143,7 @@ namespace MGui.Datatypes
         public abstract bool CanHandle( Control control, Type dataType );
 
         /// <summary>
-        /// Returns if this binder can handle the specified type if the binder can create its own control.
+        /// Returns if this binder can handle the specified type by creating its own control.
         /// </summary>
         /// <param name="dataType">Datatype expected</param>
         /// <returns>true if can handle, otherwise false</returns>
@@ -159,6 +159,61 @@ namespace MGui.Datatypes
         /// If an existing control is used this is guaranteed to be the same type passed to CanHandle(Control, Type).
         /// </param>
         public abstract void InitialiseControl( Control control, Type dataType );         
+    }
+
+    public interface IEditor<T>
+    {
+        T Value { get; set; }
+    }
+
+    public class BinderEditor : Binder
+    {
+        private static readonly MethodInfo _getTyped = typeof(BinderEditor).GetMethod( nameof( GetTyped ), BindingFlags.NonPublic | BindingFlags.Static );
+        private static readonly MethodInfo _setTyped = typeof( BinderEditor ).GetMethod( nameof( SetTyped ), BindingFlags.NonPublic | BindingFlags.Static );
+
+        public override Control CreateControl( Type dataType )
+        {
+            return null;
+        }
+
+        public override Type PreferredDataType => null;
+
+        public override object Get( Control control, Type dataType )
+        {
+            return _getTyped.MakeGenericMethod( dataType ).Invoke( null, new object[] { control } );
+        }
+
+        private static T GetTyped<T>( IEditor<T> control )
+        {
+            return control.Value;
+        }
+
+        public override void Set( Control control, object value, Type dataType )
+        {
+            _setTyped.MakeGenericMethod( dataType ).Invoke( null, new object[] { control, value } );
+        }
+
+        private static void SetTyped<T>( IEditor<T> control, T value )
+        {
+            control.Value = value;
+        }
+
+        public override bool CanHandle( Control control, Type dataType )
+        {
+            Type requiredBinder = typeof(IEditor<>).MakeGenericType( dataType );
+
+            return requiredBinder.IsAssignableFrom( control.GetType() );
+        }
+
+        public override bool CanHandle( Type dataType )
+        {
+            return false;
+        }
+
+        public override void InitialiseControl( Control control, Type dataType )
+        {
+            // NA
+        }
     }
 
     public class BinderConversion : Binder

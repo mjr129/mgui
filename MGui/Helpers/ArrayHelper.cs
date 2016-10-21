@@ -645,6 +645,22 @@ namespace MGui.Helpers
         /// (MJR) Yields indices of <paramref name="array"/> where the <paramref name="predicate"/> 
         /// is true and returns the results in the specified <paramref name="order"/>.
         /// </summary>
+        public static IEnumerable<int> WhichInOrder<T, TKey>( this IReadOnlyList<T> array, Predicate<T> predicate, Func<T, TKey> orderBy )
+        {
+            int[] which = Which( array, predicate ).ToArray();
+            T[] vals = Extract<T>( array, which ).ToArray();
+            TKey[] keys = vals.Select( orderBy ).ToArray();
+            Comparer<TKey> comparer = Comparer<TKey>.Default;
+
+            ArrayHelper.Sort( keys, which, comparer.Compare );
+
+            return which;
+        }
+
+        /// <summary>
+        /// (MJR) Yields indices of <paramref name="array"/> where the <paramref name="predicate"/> 
+        /// is true and returns the results in the specified <paramref name="order"/>.
+        /// </summary>
         public static IEnumerable<int> WhichInOrder<T>( this IReadOnlyList<T> array, Predicate<T> predicate, Comparison<T> order )
         {
             int[] which = Which( array, predicate ).ToArray();
