@@ -123,5 +123,15 @@ namespace MGui.Helpers
         {
             return Path.Combine( Path.GetDirectoryName( fileName ), Path.GetFileNameWithoutExtension( fileName ) ) + extension;
         }
+
+        public static string SanitiseFilename( string file )
+        {
+            foreach (char c in "\\/?*|><:\"")
+            {
+                file = file.Replace( c, '-' );
+            }
+
+            return file;
+        }
     }
 }

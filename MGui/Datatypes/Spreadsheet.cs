@@ -114,8 +114,8 @@ namespace MGui.Datatypes
             }
         }
 
-        public void Write<T>( Spreadsheet<T> ss, string fileName, Func<T, string> converter = null )
-        {       
+        public void Write( ISpreadsheet ss, string fileName, Func<object, string> converter = null )
+        {
             using (StreamWriter sw = new StreamWriter( fileName ))
             {
                 if (this.HasColNames)
@@ -128,24 +128,31 @@ namespace MGui.Datatypes
                     sw.WriteLine( WriteFields( ss.ColNames ) );
                 }
 
-                foreach(var row in ss.Rows)
+                for(int rowIndex = 0; rowIndex < ss.NumRows; ++rowIndex)
                 {
                     if (this.HasRowNames)
                     {
-                        sw.Write( WriteField( row.Name ));
+                        sw.Write( WriteField( ss.RowNames[rowIndex] ) );
                         sw.Write( FullDelimiter );
                     }
 
+                    IEnumerable row = ss.Rows[rowIndex];
+
                     if (converter == null)
                     {
-                        sw.WriteLine( WriteFields( row ));
+                        sw.WriteLine( WriteFields( row ) );
                     }
                     else
-                    {                                  
-                        sw.WriteLine( WriteFields( row.Select<T, string>( converter ) ) );
+                    {
+                        sw.WriteLine( WriteFields( row.Cast<object>().Select( converter ) ) );
                     }
                 }
             }
+        }
+
+        public void Write<T>( Spreadsheet<T> ss, string fileName, Func<T, string> converter = null )
+        {                    
+            Write( ss, fileName, converter );   
         }
 
         /// <summary>
@@ -391,22 +398,35 @@ namespace MGui.Datatypes
         }
     }
 
+    public interface ISpreadsheet
+    {
+        string[] ColNames { get; }
+        string[] RowNames { get; }
+        IReadOnlyList<IEnumerable> Rows { get; }
+
+        int NumRows { get; }
+    }
+
     /// <summary>
     /// Represents a data matrix read from a file.
     /// </summary>
     /// <typeparam name="TCell">Type of data</typeparam>
-    public class Spreadsheet<TCell>
+    public class Spreadsheet<TCell> : ISpreadsheet
     {
-        public readonly string Title;
-        public readonly string[] RowNames;
-        public readonly string[] ColNames;
+        public string Title;
+        public string[] RowNames => _rowNames;
+        private readonly string[] _rowNames;
+
+        public string[] ColNames => _colNames;
+        private readonly string[] _colNames;
 
         /// <summary>
         /// Data (rows, cols)
         /// </summary>
         public readonly TCell[,] Data;
-        public readonly int NumRows;
-        public readonly int NumCols;  
+
+        public int NumRows => RowNames.Length;
+        public int NumCols => ColNames.Length;
 
         /// <summary>
         /// CONSTRUCTOR
@@ -415,21 +435,17 @@ namespace MGui.Datatypes
         private Spreadsheet( string title, string[] rowNames, string[] colNames, TCell[,] data, int numRows, int numCols )
         {
             this.Title = title;
-            this.RowNames = rowNames;
-            this.ColNames = colNames;
+            _rowNames = rowNames;
+            _colNames = colNames;
             this.Data = data;
-            this.NumRows = numRows;
-            this.NumCols = numCols;
         }
 
         public Spreadsheet( int nrow, int ncol )
         {
             Title = "Untitled spreadsheet of " + nrow + " rows and " + ncol + " columns";
-            RowNames = new string[nrow];
-            ColNames = new string[ncol];
+            _rowNames = new string[nrow];
+            _colNames = new string[ncol];
             Data = new TCell[nrow, ncol];
-            NumRows = nrow;
-            NumCols = ncol;
         }
 
         /// <summary>
@@ -448,10 +464,8 @@ namespace MGui.Datatypes
                 cols = Enumerable.Range( 0, origin.NumCols ).ToArray();
             }
 
-            RowNames = origin.RowNames.Extract( rows );
-            ColNames = origin.ColNames.Extract( cols );
-            NumRows = rows.Length;
-            NumCols = cols.Length;
+            _rowNames = origin.RowNames.Extract( rows );
+            _colNames = origin.ColNames.Extract( cols );
 
             Data = new TCell[NumRows, NumCols];
 
@@ -809,6 +823,8 @@ namespace MGui.Datatypes
         }
 
         public RowCollection Rows => new RowCollection( this );
+
+        IReadOnlyList<IEnumerable> ISpreadsheet.Rows => Rows;
 
         public ColumnCollection Columns => new ColumnCollection( this );
 

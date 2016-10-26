@@ -23,7 +23,6 @@ namespace MGui.Controls
     public partial class CtlBinder<T> : Component
     {
         readonly Dictionary<Control, CtrlInfo> _properties = new Dictionary<Control, CtrlInfo>();
-        private Control _revertButtonSelection;
         private T _target;
         private BinderCollection _binderCollection;                  
 
@@ -198,22 +197,33 @@ namespace MGui.Controls
             _cmsRevertButton.Opening += _cmsRevertButton_Opening;
             _mnuSetToDefault.Click += _mnuSetToDefault_Click;
             _mnuUndoChanges.Click += _mnuUndoChanges_Click;
+            _mnuHelp.Click += _mnuHelp_Click;
+        }
+
+        private void _mnuHelp_Click( object sender, EventArgs e )
+        {
+            ContextMenuStrip menu = (ContextMenuStrip)((ToolStripMenuItem)sender).Owner;
+            Control control = menu.SourceControl;
+            MessageBox.Show( control.FindForm(), toolTip1.GetToolTip( control ), "Details", MessageBoxButtons.OK, MessageBoxIcon.Information );
         }
 
         private void _cmsRevertButton_Opening( object sender, CancelEventArgs e )
         {
-            _mnuSetToDefault.Visible = _properties[_revertButtonSelection].Path.HasDefaultValue;
+            ContextMenuStrip menu = (ContextMenuStrip)sender;
+            _mnuSetToDefault.Visible = _properties[menu.SourceControl].Path.HasDefaultValue;
         }
 
         private void _mnuUndoChanges_Click( object sender, EventArgs e )
         {
-            var ctrlInfo = _properties[_revertButtonSelection];
+            ContextMenuStrip menu = (ContextMenuStrip)((ToolStripMenuItem)sender).Owner;
+            var ctrlInfo = _properties[menu.SourceControl];
             ctrlInfo.ControlValue = ctrlInfo.OriginalValue;
         }
 
         private void _mnuSetToDefault_Click( object sender, EventArgs e )
         {
-            var ctrlInfo = _properties[_revertButtonSelection];
+            ContextMenuStrip menu = (ContextMenuStrip)((ToolStripMenuItem)sender).Owner;
+            var ctrlInfo = _properties[menu.SourceControl];
             ctrlInfo.ControlValue = ctrlInfo.Path.DefaultValue;
         }
 
@@ -243,9 +253,16 @@ namespace MGui.Controls
 
             for (int n=0; n < properties.Length; n++)
             {
-                var path = properties[n];
-                var type = path.Last.PropertyType;
-                Binder binder = this.BinderCollection.FindSuitableBinder( type );
+                PropertyPath<T, object> path = properties[n];
+                Type type = path.Last.PropertyType;
+                Binder binder = this.BinderCollection.FindSuitableBinderOrNull( type );
+
+                if (binder == null)
+                {
+                    // Ignore since we are AUTO binding
+                    continue;
+                }
+
                 Label label = new Label()
                 {
                     Text = GetPropertyName( path ),
@@ -253,13 +270,14 @@ namespace MGui.Controls
                     AutoSize = true,
                 };
 
-                Control control = binder.CreateControl( type );
-                binder.InitialiseControl( control, type );
-                control.Visible = true;
-
                 container.RowStyles.Add( new RowStyle( SizeType.AutoSize, 100.0f ) );
                 container.Controls.Add( label, 0, n );
+                           
+                Control control = binder.CreateControl( type );
+                control.Visible = true;
                 container.Controls.Add( control, 1, n );
+
+                Bind( control, path ); 
             }
 
             return container;
@@ -315,10 +333,10 @@ namespace MGui.Controls
                 toolTipText.Append( description.Description );
             }
 
-            toolTip1.SetToolTip( control, toolTipText.ToString() );        
+            toolTip1.SetToolTip( control, toolTipText.ToString() );
 
-            control.MouseUp += Control_MouseUp;
-        }
+            control.ContextMenuStrip = _cmsRevertButton;
+        }    
 
         private static string GetPropertyName( PropertyPath<T, object> path )
         {
@@ -332,16 +350,7 @@ namespace MGui.Controls
             {
                 return( path.Last.Name );
             }
-        }
-
-        private void Control_MouseUp( object sender, MouseEventArgs e )
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                _revertButtonSelection = (Control)sender;
-                _cmsRevertButton.Show( _revertButtonSelection, e.Location );
-            }
-        }
+        }  
 
         private void TrackChanges( Control control )
         {   
@@ -389,15 +398,7 @@ namespace MGui.Controls
             {
                 x.TargetValue = x.OriginalValue;
             }
-        }
-
-        private void resetButton_Click( object sender, EventArgs e )
-        {
-            Button resetButton = (Button)sender;
-
-            _revertButtonSelection = (Control)resetButton.Tag;
-            _cmsRevertButton.Show( resetButton, 0, resetButton.Height );
-        }  
+        }   
 
         /// <summary>
         /// Sets the new target and reads the data to the controls.

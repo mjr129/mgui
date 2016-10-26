@@ -24,6 +24,19 @@ namespace MGui.Helpers
             Type t = result.GetType();
 
             return t.IsGenericType && type.IsAssignableFrom( t.GetGenericTypeDefinition() );
-        } 
+        }
+
+
+        public static object GetDefault( Type dataType )
+        {
+            if (dataType.IsValueType)
+            {
+                return Activator.CreateInstance( dataType );
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

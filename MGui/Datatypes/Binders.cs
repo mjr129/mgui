@@ -37,8 +37,8 @@ namespace MGui.Datatypes
         {
             if (populateWithDefaults)
             {
-                Add( new BinderTextBox() );
                 Add( new BinderCheckBox() );
+                Add( new BinderTextBox() );
                 Add( new BinderRadioButton() );
                 Add( new BinderNumericUpDown() );
                 Add( new BinderCtlColour() );
@@ -56,6 +56,18 @@ namespace MGui.Datatypes
 
         public Binder FindSuitableBinder( Type dataType )
         {
+            Binder r = FindSuitableBinderOrNull( dataType );
+
+            if (r == null)
+            {
+                throw new InvalidOperationException( "Cannot find a Binder for " + dataType.Name );
+            }
+
+            return r;
+        }
+
+        public Binder FindSuitableBinderOrNull( Type dataType )
+        {
             foreach (Binder b in _all)
             {
                 if (b.CanHandle( dataType ) )
@@ -64,7 +76,7 @@ namespace MGui.Datatypes
                 }
             }
 
-            throw new InvalidOperationException( "Cannot find a Binder for " + dataType.Name );
+            return null;
         }
 
         public Binder FindSuitableBinder( Control control, Type dataType )
@@ -362,7 +374,22 @@ namespace MGui.Datatypes
     }
 
     internal class BinderTextBox : Binder<TextBox, IConvertible>
-    {         
+    {
+        public override bool CanHandle( Type dataType )
+        {
+            return dataType == typeof(string) || dataType == typeof(char);
+        }
+
+        protected override void ConfigureControl( TextBox control, Type dataType )
+        {
+            base.ConfigureControl( control, dataType );
+
+            if (dataType == typeof(char))
+            {
+                control.MaxLength = 1;
+            }
+        }
+
         protected override IConvertible GetValue( TextBox control, Type dataType )
         {
             return (IConvertible)Convert.ChangeType( control.Text, dataType );
@@ -374,7 +401,7 @@ namespace MGui.Datatypes
         }
 
         public override Type PreferredDataType => typeof( string );
-    }
+    }         
 
     internal class BinderTextBoxArray : Binder<TextBox, Array>
     {
@@ -409,16 +436,16 @@ namespace MGui.Datatypes
         }
     }
 
-    internal class BinderCheckBox : Binder<CheckBox, IConvertible>
+    internal class BinderCheckBox : Binder<CheckBox, bool>
     {
-        protected override IConvertible GetValue( CheckBox control, Type dataType )
+        protected override bool GetValue( CheckBox control, Type dataType )
         {
-            return (IConvertible)Convert.ChangeType( control.Checked, dataType );
+            return (bool)control.Checked;
         }
 
-        protected override void SetValue( CheckBox control, IConvertible value, Type dataType )
+        protected override void SetValue( CheckBox control, bool value, Type dataType )
         {
-            control.Checked = Convert.ToBoolean( value );
+            control.Checked = value;
         }
     }
 
@@ -481,21 +508,30 @@ namespace MGui.Datatypes
         }
     }
 
-    internal class BinderRadioButton : Binder<RadioButton, IConvertible>
+    internal class BinderRadioButton : Binder<RadioButton, bool>
     {
-        protected override IConvertible GetValue( RadioButton control, Type dataType )
+        protected override bool GetValue( RadioButton control, Type dataType )
         {
-            return (IConvertible)Convert.ChangeType( control.Checked, dataType );
+            return control.Checked;
         }
 
-        protected override void SetValue( RadioButton control, IConvertible value, Type dataType )
+        protected override void SetValue( RadioButton control, bool value, Type dataType )
         {
-            control.Checked = Convert.ToBoolean( value );
+            control.Checked = value;
         }
     }
 
     internal class BinderNumericUpDown : Binder<NumericUpDown, IConvertible>
     {
+        public override bool CanHandle( Type dataType )
+        {
+            return dataType == typeof(int) ||
+                   dataType == typeof(double) ||
+                   dataType == typeof(uint) ||
+                   dataType == typeof(float) ||
+                   dataType == typeof(decimal);
+        }
+
         protected override IConvertible GetValue( NumericUpDown control, Type dataType )
         {
             return (IConvertible)Convert.ChangeType( control.Value, dataType );

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MGui.Datatypes;
 
 namespace MGui.Helpers
 {
@@ -132,6 +133,20 @@ namespace MGui.Helpers
             }
 
             return enumerable.ToList();
+        }
+
+        public static RangeD Range( this IEnumerable<double> list )
+        {
+            double min = double.MaxValue;
+            double max = double.MinValue;
+
+            foreach (var x in list)
+            {
+                if (x < min) min = x;
+                if (x >= max) max = x;
+            }
+
+            return new RangeD( min, max );
         }
 
         /// <summary>
@@ -745,6 +760,26 @@ namespace MGui.Helpers
             foreach (int i in which)
             {
                 yield return array[i];
+            }
+        }
+
+        public static void Set<T>( this T[] array, IEnumerable<T> values )
+        {
+            IEnumerator<T> en = values.GetEnumerator();
+
+            for (int n = 0; n < array.Length; ++n)
+            {
+                if (!en.MoveNext())
+                {
+                    throw new InvalidOperationException( "Set called with different array lengths (values LESS THAN array)." );
+                }
+
+                array[n] = en.Current;
+            }
+
+            if (en.MoveNext())
+            {
+                throw new InvalidOperationException( "Set called with different array lengths (values GREATER THAN array)." );
             }
         }
 
