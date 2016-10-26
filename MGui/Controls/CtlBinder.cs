@@ -484,6 +484,8 @@ namespace MGui.Controls
             }
         }
 
+        public ToolTip ToolTipControl => toolTip1;
+
         [Obsolete("Use Target instead.")]                                
         public void SetTarget( T newTarget )
         {
