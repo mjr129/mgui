@@ -12,10 +12,10 @@ namespace MGui.Controls
 {
     public class CtlSplitter : SplitContainer
     {
-        static Brush _fill = Brushes.LightSlateGray;
-        static Pen _outline = Pens.LightSlateGray;
-        static Pen _outline2 = Pens.LightSlateGray;
-        static Pen _dots = new Pen( Color.DarkSlateGray, 2 );
+        private static Brush _fill = Brushes.LightSlateGray;
+        private static Pen _outline = Pens.LightSlateGray;
+        private static Pen _outline2 = Pens.LightSlateGray;
+        private static Pen _dots = new Pen( Color.DarkSlateGray, 2 );
 
         public CtlSplitter()
         {                                                                   
@@ -48,22 +48,28 @@ namespace MGui.Controls
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            CtlSplitter s = this;
+            Draw( e.Graphics, this.Orientation == Orientation.Horizontal, this.SplitterRectangle, this.SplitterDistance );
+        }
+
+        public static void Draw( Graphics g, bool horizontal, Rectangle rectangle, int offset )
+        {                        
             int gripLineWidth = 15; //9;
 
-            if (this.Orientation == Orientation.Horizontal)
+            if (horizontal)
             {
-                e.Graphics.FillRectangle(_fill, s.SplitterRectangle.X, s.SplitterDistance, s.SplitterRectangle.Width, s.SplitterWidth);
-                e.Graphics.DrawLine(_outline, s.SplitterRectangle.X, s.SplitterDistance, s.SplitterRectangle.Width, s.SplitterDistance);
-                e.Graphics.DrawLine(_outline2, s.SplitterRectangle.X, s.SplitterDistance + s.SplitterWidth - 1, s.SplitterRectangle.Width, s.SplitterDistance + s.SplitterWidth - 1);
-                e.Graphics.DrawLine(_dots, ((s.SplitterRectangle.Width / 2) - (gripLineWidth / 2)), s.SplitterDistance + s.SplitterWidth / 2, ((s.SplitterRectangle.Width / 2) + (gripLineWidth / 2)), s.SplitterDistance + s.SplitterWidth / 2);
+                int w = rectangle.Height;
+                g.FillRectangle( _fill, rectangle.X, offset, rectangle.Width, w );
+                g.DrawLine( _outline, rectangle.X, offset, rectangle.Width, offset );
+                g.DrawLine( _outline2, rectangle.X, offset + w - 1, rectangle.Width, offset + w - 1 );
+                g.DrawLine( _dots, ((rectangle.Width / 2) - (gripLineWidth / 2)), offset + w / 2, ((rectangle.Width / 2) + (gripLineWidth / 2)), offset + w / 2 );
             }
             else
             {
-                e.Graphics.FillRectangle( _fill, s.SplitterDistance, s.SplitterRectangle.Y, s.SplitterWidth, s.SplitterRectangle.Height);
-                e.Graphics.DrawLine( _outline, s.SplitterDistance, s.SplitterRectangle.Y, s.SplitterDistance, s.SplitterRectangle.Height);
-                e.Graphics.DrawLine( _outline2, s.SplitterDistance + s.SplitterWidth - 1, s.SplitterRectangle.Y, s.SplitterDistance + s.SplitterWidth - 1, s.SplitterRectangle.Height);
-                e.Graphics.DrawLine(_dots, s.SplitterDistance + s.SplitterWidth / 2, ((s.SplitterRectangle.Height / 2) - (gripLineWidth / 2)), s.SplitterDistance + s.SplitterWidth / 2, ((s.SplitterRectangle.Height / 2) + (gripLineWidth / 2)));
+                int w = rectangle.Width;
+                g.FillRectangle( _fill, offset, rectangle.Y, w, rectangle.Height );
+                g.DrawLine( _outline, offset, rectangle.Y, offset, rectangle.Height );
+                g.DrawLine( _outline2, offset + w - 1, rectangle.Y, offset + w - 1, rectangle.Height );
+                g.DrawLine( _dots, offset + w / 2, ((rectangle.Height / 2) - (gripLineWidth / 2)), offset + w / 2, ((rectangle.Height / 2) + (gripLineWidth / 2)) );
             }
         }
     }

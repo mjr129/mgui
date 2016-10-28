@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MGui.Datatypes
+namespace MGui.Helpers
 {
     /// <summary>
     /// Creates a modifiable bitmap from the source and locks the image for editing.
@@ -32,18 +32,18 @@ namespace MGui.Datatypes
         public BitmapDataHelper( Image source )
         {
             this._result = new Bitmap( source );
-            Rectangle entirity = new Rectangle( 0, 0, _result.Width, _result.Height );
+            Rectangle entirity = new Rectangle( 0, 0, this._result.Width, this._result.Height );
 
-            this._bitmapData = _result.LockBits( entirity, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb );
+            this._bitmapData = this._result.LockBits( entirity, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb );
 
-            this._strideInInts = _bitmapData.Stride / sizeof( UInt32 );
-            int sizeInInts = _bitmapData.Height * _strideInInts;
+            this._strideInInts = this._bitmapData.Stride / sizeof( UInt32 );
+            int sizeInInts = this._bitmapData.Height * this._strideInInts;
             this._data = new UInt32[sizeInInts];
-            this.Height = _bitmapData.Height;
-            this.Width = _bitmapData.Width;
+            this.Height = this._bitmapData.Height;
+            this.Width = this._bitmapData.Width;
 
             // Marshal to avoid unsafe code...
-            Marshal.Copy( _bitmapData.Scan0, (int[])(object)_data, 0, sizeInInts );
+            Marshal.Copy( this._bitmapData.Scan0, (int[])(object)this._data, 0, sizeInInts );
         }
 
         /// <summary>
@@ -51,8 +51,8 @@ namespace MGui.Datatypes
         /// </summary>             
         public uint this[int x, int y]
         {
-            get { return _data[x + y * _strideInInts]; }
-            set { _data[x + y * _strideInInts] = value; }
+            get { return this._data[x + y * this._strideInInts]; }
+            set { this._data[x + y * this._strideInInts] = value; }
         }
 
         /// <summary>
@@ -60,10 +60,10 @@ namespace MGui.Datatypes
         /// </summary>                                          
         public Bitmap Unlock()
         {
-            Marshal.Copy( (int[])(object)_data, 0, _bitmapData.Scan0, _data.Length );
-            _result.UnlockBits( _bitmapData );
-            var fr = _result;
-            _result = null;
+            Marshal.Copy( (int[])(object)this._data, 0, this._bitmapData.Scan0, this._data.Length );
+            this._result.UnlockBits( this._bitmapData );
+            var fr = this._result;
+            this._result = null;
             return fr;
         }
 
@@ -72,7 +72,7 @@ namespace MGui.Datatypes
         /// </summary>                                                               
         public uint GetOrDefault( int x, int y )
         {
-            if (x < 0 || x >= Width || y < 0 || y >= Height)
+            if (x < 0 || x >= this.Width || y < 0 || y >= this.Height)
             {
                 return 0;
             }

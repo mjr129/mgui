@@ -240,12 +240,12 @@ namespace MGui.Datatypes
             // NFA
         }                      
 
-        public new TDestination Get( TSource target )
+        public TDestination Get( TSource target )
         {
             return (TDestination) base.Get( target );
         }
 
-        public new void Set( TSource target, TDestination value )
+        public void Set( TSource target, TDestination value )
         {
             base.Set( target, value );
         }

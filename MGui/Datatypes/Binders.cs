@@ -360,8 +360,9 @@ namespace MGui.Datatypes
             return new TControl();   
         }
 
-        public override void InitialiseControl( Control control, Type dataType )
+        public sealed override void InitialiseControl( Control control, Type dataType )
         {
+            control.Dock = DockStyle.Top;
             ConfigureControl( (TControl)control, dataType );
         }
 

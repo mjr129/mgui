@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using MGui.Datatypes;
 
 namespace MGui.Helpers
@@ -777,6 +778,31 @@ namespace MGui.Helpers
             }
 
             return arg;
+        }      
+
+        /// <summary>
+        /// Sets the text of the linklabel, with the area in brackets as the link area.
+        /// </summary>
+        /// <param name="lbl"></param>
+        /// <param name="text"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        public static void SetText( this LinkLabel lbl, string text, string start = "<", string end = ">" )
+        {
+            if (end == null)
+            {
+                end = start;
+            }
+
+            int index = text.IndexOf( start, StringComparison.Ordinal );
+            int lindex = text.IndexOf( end, index + start.Length, StringComparison.Ordinal );
+
+            int midstart = index + start.Length;
+            int midlen = lindex - midstart;
+            string fText = text.Substring( 0, index ) + text.Substring( midstart, midlen ) + text.Substring( lindex + end.Length );
+
+            lbl.Text = fText;
+            lbl.LinkArea = new LinkArea( midstart - start.Length, midlen );
         }
     }
 }

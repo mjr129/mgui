@@ -15,7 +15,7 @@ namespace MGui.Helpers
         /// <summary>
         /// Enumerates all controls within [ctrl] of type [T].
         /// </summary>
-        public static IEnumerable<Control> EnumerateControls( Control ctrl, Control ignore )
+        public static IEnumerable<Control> EnumerateControls( Control ctrl, Control ignore = null )
         {
             if (ctrl == ignore)
             {

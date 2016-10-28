@@ -247,9 +247,9 @@ namespace MGui.Datatypes
 
             if (s.Contains( this.Delimiter ) || s.Contains( this.OpenQuote ) || s.Contains( this.CloseQuote ) || s.StartsWith( " " ) || s.EndsWith( " " ))
             {
-                return "\""
+                return this.OpenQuote
                      + s.Replace( this.CloseQuote.ToString(), this.CloseQuote.ToString() + this.CloseQuote )
-                     + "\"";
+                     + this.CloseQuote;
             }
             else
             {
