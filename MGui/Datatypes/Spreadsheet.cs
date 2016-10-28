@@ -365,6 +365,7 @@ namespace MGui.Datatypes
                             //Debug.Write( "double close quote (ignored) " );
 
                             needToRemoveDoubleQuotes = true;
+                            ++n;
                         }
                         else
                         {
