@@ -922,6 +922,14 @@ namespace MGui.Helpers
             return true;
         }
 
+        public static void Toggle<T>( this HashSet<T> self, T x )
+        {
+            if (!self.Add( x ))
+            {
+                self.Remove( x );
+            }
+        }
+
         #region Obsolete wrappers 
 
         [Obsolete( "Use At" )]
