@@ -963,5 +963,20 @@ namespace MGui.Helpers
         }
 
         #endregion
+
+        public static void CopyRow( IEnumerable< double> source, double[,] destination, int rowIndex )
+        {
+            int col = -1;
+
+            foreach (double d in source)
+            {
+                destination[rowIndex, ++col] = d;
+            }
+
+            if (col != destination.GetLength( 1 ) - 1)
+            {
+                throw new InvalidOperationException( $"Attempt to copy a row using CopyRow from a source of length {{{col}}} to a destination of length {{{destination.GetLength( 1 )}}}." );
+            }                                         
+        }
     }
 }

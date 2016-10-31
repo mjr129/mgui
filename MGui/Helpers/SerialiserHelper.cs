@@ -12,6 +12,9 @@ using MGui.Datatypes;
 
 namespace MGui.Helpers
 {
+    /// <summary>
+    /// Set of functions wrapping up common serialisation routines into single line statements.
+    /// </summary>
     public static class SerialiserHelper
     {
         public static void Serialise<T>( string fileName, T value )

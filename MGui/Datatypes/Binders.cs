@@ -504,8 +504,11 @@ namespace MGui.Datatypes
         {
             base.ConfigureControl( control, dataType );
 
-            control.Items.Add( "No" );
-            control.Items.Add( "Yes" );
+            if (control.Items.Count == 0)
+            { // Only if not populated by the creator
+                control.Items.Add( "No" );
+                control.Items.Add( "Yes" );
+            }
         }
     }
 
