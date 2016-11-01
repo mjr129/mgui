@@ -14,5 +14,29 @@ namespace MGui.Helpers
             string text = self.Text;                                                                                                      
             self.Text = text.Substring( 0, self.SelectionStart ) + newText + text.Substring( self.SelectionStart + self.SelectionLength ); ;
         }
+
+        public static IEnumerable<TreeNode> GetAllNodes( this TreeView self )
+        {           
+            foreach (TreeNode node in self.Nodes)
+            {
+                foreach (TreeNode node2 in GetAllNodes( node ))
+                {
+                    yield return node2;
+                }
+            }
+        }
+
+        public static IEnumerable<TreeNode> GetAllNodes( this TreeNode self )
+        {
+            yield return self;
+
+            foreach (TreeNode node in self.Nodes)
+            {
+                foreach (TreeNode node2 in GetAllNodes( node ))
+                {
+                    yield return node2;
+                }
+            }
+        }
     }
 }

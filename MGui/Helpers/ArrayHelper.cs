@@ -922,6 +922,19 @@ namespace MGui.Helpers
             return true;
         }
 
+        public static IEnumerable<T> EnumerateTree<T>( T root, Func<T, IEnumerable<T>> childSelector )
+        {
+            yield return root;
+
+            foreach (T child in childSelector( root ))
+            {
+                foreach (T result in EnumerateTree<T>( child, childSelector ))
+                {
+                    yield return result;
+                }
+            }
+        }
+
         public static void Toggle<T>( this HashSet<T> self, T x )
         {
             if (!self.Add( x ))
