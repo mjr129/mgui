@@ -318,7 +318,7 @@ namespace MGui.Controls
             // Create tooltops          
             StringBuilder toolTipText = new StringBuilder();
             CategoryAttribute category = path.Last.GetCustomAttribute<CategoryAttribute>();
-            DescriptionAttribute description = path.Last.GetCustomAttribute<DescriptionAttribute>();
+            string description = path.Last.Member.ToDescription();
 
             if (category != null)
             {
@@ -330,7 +330,7 @@ namespace MGui.Controls
             if (description != null)
             {
                 toolTipText.AppendLine();
-                toolTipText.Append( description.Description );
+                toolTipText.Append( description );
             }
 
             toolTip1.SetToolTip( control, toolTipText.ToString() );

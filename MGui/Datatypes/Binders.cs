@@ -49,9 +49,13 @@ namespace MGui.Datatypes
             }
         }
 
-        public void Add( Binder binder )
-        {
+        /// <summary>
+        /// Adds the binder to the collection.
+        /// </summary>                        
+        public bool Add( Binder binder, string id = null )
+        {                
             _all.Add( binder );
+            return true;
         }
 
         public Binder FindSuitableBinder( Type dataType )

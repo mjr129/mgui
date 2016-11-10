@@ -649,6 +649,45 @@ namespace MGui.Helpers
             return GetNameFromAttribute( self );
         }
 
+        public static string ToDescription( this MemberInfo self )
+        {
+            var attr = self.GetCustomAttribute<DescriptionAttribute>();
+
+            if (attr != null)
+            {
+                return attr.Description;
+            }
+
+            if (_xmlDocReader != null)
+            {
+                return _xmlDocReader.Get( self );
+            }
+
+            return null;
+        }
+
+        private static XmlDocReader _xmlDocReader;
+
+        public static bool IncludeXmlDocumentation
+        {
+            get
+            {
+                return _xmlDocReader != null;
+            }
+            set
+            {
+                if (_xmlDocReader == null)
+                {
+                    _xmlDocReader = new XmlDocReader();
+                    _xmlDocReader.ReadMine();
+                }
+                else
+                {
+                    _xmlDocReader = null;
+                }
+            }
+        }
+
         private static string FormatGenericName( MemberInfo member, Type[] arguments )
         {
             StringBuilder sb = new StringBuilder();

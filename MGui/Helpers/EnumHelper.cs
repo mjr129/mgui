@@ -24,46 +24,24 @@ namespace MGui.Helpers
 
         /// <summary>
         /// (MJR) (EXTENSION)
-        /// Converts an enum to a string accounting for NameAttribute attributes.
+        /// Calls <see cref="StringHelper.ToUiString(MemberInfo)"/> on the enum field.
         /// </summary>
         public static string ToUiString( this Enum @enum )
         {
             string name = @enum.ToString();
             FieldInfo fieldInfo = @enum.GetType().GetField( name );
-
-            if (fieldInfo != null) // i.e. if not a valid enum such as "-1"
-            {
-                NameAttribute nameAttr = (NameAttribute)fieldInfo.GetCustomAttribute<NameAttribute>();
-
-                if (nameAttr != null)
-                {
-                    return nameAttr.Name;
-                }
-            }
-
-            return name;
+            return fieldInfo?.ToUiString() ?? name;
         }
 
         /// <summary>
         /// (MJR) (EXTENSION)
-        /// Converts an enum to a string accounting for DescriptionAttribute attributes.
+        /// Calls <see cref="StringHelper.ToDescription(MemberInfo)"/> on the enum field.
         /// </summary>
         public static string ToDescription( Enum @enum )
         {
             string name = @enum.ToString();
             FieldInfo fieldInfo = @enum.GetType().GetField( name );
-
-            if (fieldInfo != null) // i.e. if not a valid enum such as "-1"
-            {
-                DescriptionAttribute nameAttr = (DescriptionAttribute)fieldInfo.GetCustomAttribute<DescriptionAttribute>();
-
-                if (nameAttr != null)
-                {
-                    return nameAttr.Description;
-                }
-            }
-
-            return null;
+            return fieldInfo?.ToDescription() ?? null;
         }
 
         /// <summary>
