@@ -13,7 +13,7 @@ namespace MGui.Datatypes
     /// </summary>
     public abstract class SettableInfo : MemberInfo
     {
-        protected abstract MemberInfo Member { get; }
+        public abstract MemberInfo Member { get; }
 
         public override Type DeclaringType => Member.DeclaringType;
 
@@ -69,7 +69,7 @@ namespace MGui.Datatypes
                 _member = member;
             }
 
-            protected override MemberInfo Member => _member;
+            public override MemberInfo Member => _member;
 
             public override Type PropertyType => _member.PropertyType;
 
@@ -93,7 +93,7 @@ namespace MGui.Datatypes
                 _member = member;
             }
 
-            protected override MemberInfo Member => _member;
+            public override MemberInfo Member => _member;
 
             public override Type PropertyType => _member.FieldType;
 

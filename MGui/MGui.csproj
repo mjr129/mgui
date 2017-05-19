@@ -91,6 +91,8 @@
       <DependentUpon>InputBox.cs</DependentUpon>
     </Compile>
     <Compile Include="Datatypes\RangeD.cs" />
+    <Compile Include="Datatypes\XDom.cs" />
+    <Compile Include="Datatypes\XmlDocReader.cs" />
     <Compile Include="Helpers\BitmapDataHelper.cs" />
     <Compile Include="Datatypes\Counter.cs" />
     <Compile Include="Datatypes\EquivalencePool.cs" />
