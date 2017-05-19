@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -8,18 +9,18 @@ using System.Windows.Forms;
 
 namespace MGui.Helpers
 {
-    public class ImageListHelper : IDisposable
+    public class ImageListIndexHelper : IDisposable
     {
         private readonly Dictionary<object, int> _objectAssociations = new Dictionary<object, int>();
         private readonly Dictionary<Image, int> _imageIndices = new Dictionary<Image, int>();
-        private readonly ImageList _imageList;
+        private readonly ImageList _imageList;                      
 
-        public ImageListHelper()
+        public ImageListIndexHelper()
         {
             this._imageList = new ImageList();
         }
 
-        public ImageListHelper( ImageList imageList )
+        public ImageListIndexHelper( ImageList imageList )
         {
             this._imageList = imageList;
         }
@@ -33,7 +34,7 @@ namespace MGui.Helpers
         {
             _objectAssociations.Clear();
             _imageList.Images.Clear();
-            _imageIndices.Clear();
+            _imageIndices.Clear();   
         }
 
         /// <summary>
@@ -61,7 +62,8 @@ namespace MGui.Helpers
         /// Gets the index associated with the image, creating it if it doesn't exist
         /// </summary>                                                               
         /// <remarks>
-        /// Only works where references to images stay intact!
+        /// This only works where references to images stay intact.
+        /// Notably Resource.Xyz returns a different image each time, which is why <see cref="GetAssociatedImageIndex(object, Func{Image})"/> exists.
         /// </remarks>
         public int GetIndex( Image image )
         {          
@@ -70,11 +72,12 @@ namespace MGui.Helpers
             if (_imageIndices.TryGetValue( image, out result ))
             {
                 return result;
-            }
+            }                              
 
             result = _imageList.Images.Count;
-            _imageIndices.Add( image, result );
             _imageList.Images.Add( image );
+            _imageIndices.Add( image, result );
+            Debug.WriteLine( "_imageList.Count is " + _imageList.Images.Count );
             return result;
         }
 

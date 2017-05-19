@@ -122,7 +122,8 @@
     <Compile Include="Helpers\FileHelper.cs" />
     <Compile Include="Helpers\FormHelper.cs" />
     <Compile Include="Helpers\ImageHelper.cs" />
-    <Compile Include="Helpers\ImageListHelper.cs" />
+    <Compile Include="Helpers\ImageListIndexHelper.cs" />
+    <Compile Include="Helpers\ImageListKeyHelper.cs" />
     <Compile Include="Helpers\IntHelper.cs" />
     <Compile Include="Helpers\ListBoxHelper.cs" />
     <Compile Include="Helpers\ListViewHelper.cs" />
