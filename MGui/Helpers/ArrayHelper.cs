@@ -61,6 +61,11 @@ namespace MGui.Helpers
         /// </summary>
         public static bool IsEmpty( this IEnumerable enumerable )
         {
+            if (enumerable == null)
+            {
+                return true;
+            }
+
             return !enumerable.GetEnumerator().MoveNext();
         }
 
